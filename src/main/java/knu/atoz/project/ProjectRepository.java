@@ -15,6 +15,31 @@ import java.util.List;
 @Repository
 public class ProjectRepository {
 
+    public List<Project> findAllProjects() {
+        String sql = "SELECT * FROM project";
+        List<Project> projectList = new ArrayList<>();
+
+        try (Connection conn = Azconnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Project project = new Project(
+                            rs.getLong("id"),
+                            rs.getString("title"),
+                            rs.getString("description"),
+                            rs.getObject("created_at", LocalDateTime.class),
+                            rs.getObject("updated_at", LocalDateTime.class)
+                    );
+                    projectList.add(project);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("DB 조회 중 오류 발생: " + e.getMessage());
+        }
+        return projectList;
+    }
+
     public Project findById(Long projectId) {
         String sql = "select * from project where id=?";
 

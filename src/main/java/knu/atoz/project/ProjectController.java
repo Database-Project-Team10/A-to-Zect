@@ -31,6 +31,16 @@ public class ProjectController {
     private final ProjectTechspecService projectTechspecService;
     private final ProjectMbtiService projectMbtiService;
 
+    @GetMapping("")
+    public String showAllProjects(Model model) {
+
+        List<Project> projectList = projectService.getAllProjects();
+
+        // "projects"라는 이름으로 HTML에 전달
+        model.addAttribute("projects", projectList);
+
+        return "project/list";
+    }
 
     // 2. 프로젝트 생성 '페이지' 보여주기 (GET /projects/create)
     @GetMapping("/create")

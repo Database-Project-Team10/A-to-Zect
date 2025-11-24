@@ -42,8 +42,11 @@ public class ProjectService {
         this.projectMbtiRepository = projectMbtiRepository;
     }
 
-    public List<Project> getProjectList(int cnt) {
+    public List<Project> getAllProjects() {
+        return projectRepository.findAllProjects();
+    }
 
+    public List<Project> getProjectList(int cnt) {
         return projectRepository.findProjects(cnt);
     }
 

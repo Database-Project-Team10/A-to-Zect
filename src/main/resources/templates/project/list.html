@@ -2,46 +2,164 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>프로젝트 목록</title>
+    <title>A to Zect - 전체 프로젝트</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <style>
+        /* 1. 상단 헤더 (로고 + 로그인 버튼) */
+        .header-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .brand-logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .auth-links a {
+            margin-left: 15px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+        }
+        .auth-links a:hover { color: #007bff; }
+
+        /* 2. 프로젝트 카드 그리드 레이아웃 */
+        .project-grid {
+            display: grid;
+            /* 카드의 최소 너비를 250px로 설정, 화면 크기에 따라 자동 나열 (무한 스크롤 형태) */
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px; /* 카드 사이 간격 */
+            margin-top: 20px;
+        }
+
+        /* 개별 카드 스타일 */
+        .project-card {
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: left;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+            border-color: #007bff;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+            flex-grow: 1;
+            margin-bottom: 15px;
+        }
+
+        .card-footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .badge-status {
+            background-color: #eef2ff;
+            color: #4f46e5;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+    </style>
 </head>
 <body>
 
-<h1>전체 프로젝트 목록</h1>
+<div class="container" style="max-width: 1000px;"> <div class="header-nav">
+    <a href="/" class="brand-logo">AtoZect</a>
 
-<div>
-    <a href="/">[홈으로]</a>
-    <a href="/projects/my">[내 프로젝트 보기]</a>
-    <a href="/projects/create">[새 프로젝트 생성]</a>
+    <div class="auth-links">
+            <span th:if="${session.loginMember == null}">
+                <a href="/members/login">로그인</a>
+                <a href="/members/signup" class="btn btn-primary" style="color:white; padding: 8px 15px; border-radius: 20px;">회원가입</a>
+            </span>
+
+        <span th:if="${session.loginMember != null}">
+                <span style="margin-right: 10px; color: #333;">
+                    👋 <strong th:text="${session.loginMember.name}">사용자</strong>님
+                </span>
+                <a href="/members/mypage">내 정보</a>
+                <a href="/members/logout" style="color: #dc3545;">로그아웃</a>
+            </span>
+    </div>
 </div>
-<hr>
 
-<table border="1" style="width: 100%; text-align: center;">
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>제목</th>
-        <th>설명</th>
-        <th>기능</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:if="${projects.isEmpty()}">
-        <td colspan="4">생성된 프로젝트가 없습니다.</td>
-    </tr>
+    <div style="text-align: center; margin-bottom: 40px;">
+        <h1>전체 프로젝트 목록</h1>
+        <p class="subtitle">현재 진행 중인 모든 프로젝트를 확인하세요.</p>
 
-    <tr th:each="project : ${projects}">
-        <td th:text="${project.id}">1</td>
-        <td th:text="${project.title}">프로젝트 제목</td>
-        <td th:text="${#strings.abbreviate(project.description, 20)}">설명 요약</td>
-        <td>
-            <form th:action="@{|/projects/${project.id}/join|}" method="post" style="display:inline;">
-                <button type="submit" onclick="return confirm('이 프로젝트에 참여하시겠습니까?')">참여하기</button>
-            </form>
-        </td>
-    </tr>
-    </tbody>
-</table>
+        <div th:if="${session.loginMember != null}" class="menu-grid" style="max-width: 500px; margin: 0 auto;">
+            <button class="btn btn-outline" onclick="location.href='/projects/create'">➕ 프로젝트 생성</button>
+            <button class="btn btn-outline" onclick="location.href='/projects/my'">📂 내 프로젝트</button>
+        </div>
+    </div>
+
+    <div class="project-section" style="border-top: none;">
+
+        <div style="margin-bottom: 15px;">
+            <h3 style="margin: 0; border: none; padding: 0;">📋 등록된 전체 프로젝트</h3>
+        </div>
+
+        <div class="project-grid">
+
+            <div th:if="${projects == null || projects.isEmpty()}"
+                 style="grid-column: 1 / -1; text-align: center; padding: 60px; background: #f9f9f9; border-radius: 10px; color: #888;">
+                <p style="font-size: 18px; margin-bottom: 10px;">등록된 프로젝트가 없습니다.</p>
+                <p>첫 번째 프로젝트의 주인공이 되어보세요!</p>
+            </div>
+
+            <a th:each="project : ${projects}"
+               th:href="@{/projects/{id}(id=${project.id})}"
+               class="project-card">
+
+                <span class="card-title" th:text="${project.title}">프로젝트 제목</span>
+
+                <p class="card-desc"
+                   th:text="${#strings.abbreviate(project.description, 50)}">
+                    프로젝트 설명이 들어갑니다...
+                </p>
+
+                <div class="card-footer">
+                    <span class="badge-status">모집중</span>
+                    <span>상세보기 →</span>
+                </div>
+            </a>
+
+        </div>
+    </div>
+
+</div>
 
 </body>
 </html>

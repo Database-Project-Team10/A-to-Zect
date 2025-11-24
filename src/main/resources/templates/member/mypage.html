@@ -2,65 +2,152 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>내 정보</title>
+    <title>AtoZect - 내 정보</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <style>
+        /* 마이페이지 전용 스타일 */
+
+        /* 상단 헤더 (인덱스와 동일) */
+        .header-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .brand-logo { font-size: 22px; font-weight: 800; color: #007bff; }
+
+        /* 정보 섹션 카드 스타일 */
+        .info-card {
+            background: #fff;
+            border: 1px solid #e1e4e8;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        /* 라벨-값 쌍 정렬 */
+        .info-row {
+            display: flex;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #f5f5f5;
+            padding-bottom: 12px;
+        }
+        .info-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+        .info-label {
+            width: 120px;
+            font-weight: bold;
+            color: #555;
+            flex-shrink: 0; /* 라벨 너비 고정 */
+        }
+        .info-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* MBTI 뱃지 */
+        .mbti-badge {
+            display: inline-block;
+            font-size: 20px;
+            font-weight: 800;
+            color: #4f46e5;
+            background: #eef2ff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            letter-spacing: 2px;
+        }
+
+        /* 프로젝트 리스트 스타일 */
+        .project-item {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #007bff; /* 왼쪽 포인트 컬러 */
+            font-size: 15px;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
 
-<h1>내 정보</h1>
+<div class="container" style="max-width: 700px;">
 
-<!-- 상단 네비게이션 -->
-<div>
-    <a href="/">[메인으로]</a>
-    <a href="/members/logout">[로그아웃]</a>
+    <div class="header-nav">
+        <a href="/" class="brand-logo">AtoZect</a>
+        <div>
+            <a href="/" class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;">메인으로</a>
+            <a href="/members/logout" class="btn btn-danger" style="padding: 6px 12px; font-size: 13px;">로그아웃</a>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h1>내 정보 관리</h1>
+        <p class="subtitle">나의 프로필 정보를 확인하세요.</p>
+    </div>
+
+    <div class="info-card">
+        <h3 style="margin-top: 0; border-left: none; padding-left: 0;">📝 기본 정보</h3>
+
+        <div class="info-row">
+            <span class="info-label">이름</span>
+            <span class="info-value" th:text="${info.name}">홍길동</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">이메일</span>
+            <span class="info-value" th:text="${info.email}">test@example.com</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">생년월일</span>
+            <span class="info-value" th:text="${info.birthDate}">2000-01-01</span>
+        </div>
+    </div>
+
+    <div class="info-card">
+        <h3 style="margin-top: 0; border-left: none; padding-left: 0;">🧠 MBTI & 기술</h3>
+
+        <div style="margin-bottom: 20px;">
+            <div style="font-size: 13px; color: #888; margin-bottom: 5px;">나의 MBTI</div>
+            <span th:if="${info.mbti != null}" class="mbti-badge" th:text="${info.mbti}">ENTP</span>
+            <span th:if="${info.mbti == null}" style="color: #999;">등록된 MBTI가 없습니다.</span>
+        </div>
+
+        <div>
+            <div style="font-size: 13px; color: #888; margin-bottom: 5px;">보유 기술 스택</div>
+
+            <div th:if="${info.techspecs == null || info.techspecs.isEmpty()}" style="color: #999;">
+                등록된 기술 스택이 없습니다.
+            </div>
+
+            <div th:if="${info.techspecs != null}">
+                <span th:each="tech : ${#strings.arraySplit(info.techspecs, ',')}"
+                      class="badge"
+                      style="font-size: 14px; padding: 6px 10px;"
+                      th:text="${#strings.trim(tech)}">Java</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-card">
+        <h3 style="margin-top: 0; border-left: none; padding-left: 0;">🚀 참여 프로젝트 이력</h3>
+
+        <div th:if="${info.projectAndRole == null || info.projectAndRole.isEmpty()}" style="text-align: center; color: #999; padding: 20px;">
+            참여한 프로젝트 내역이 없습니다.
+        </div>
+
+        <div th:if="${info.projectAndRole != null}">
+            <div th:each="proj : ${#strings.arraySplit(info.projectAndRole, ';')}"
+                 class="project-item"
+                 th:text="${#strings.trim(proj)}">
+                AtoZect 프로젝트 (팀장)
+            </div>
+        </div>
+    </div>
+
 </div>
-
-<hr>
-
-<!-- 1. 기본 정보 -->
-<h3>기본 정보</h3>
-<ul>
-    <li><strong>이름:</strong> <span th:text="${info.name}">이름</span></li>
-    <li><strong>이메일:</strong> <span th:text="${info.email}">email@example.com</span></li>
-    <li><strong>생년월일:</strong> <span th:text="${info.birthDate}">2000-01-01</span></li>
-</ul>
-
-<hr>
-
-<!-- 2. MBTI -->
-<h3>MBTI</h3>
-<p th:if="${info.mbti != null}" th:text="${info.mbti}">ENTP</p>
-<p th:if="${info.mbti == null}">등록된 MBTI가 없습니다.</p>
-
-<hr>
-
-<!-- 3. 기술 스택 (콤마로 잘라서 리스트로 출력) -->
-<h3>기술 스택</h3>
-<!-- 데이터가 없을 때 -->
-<div th:if="${info.techspecs == null || info.techspecs.isEmpty()}">
-    <p>등록된 기술 스택이 없습니다.</p>
-</div>
-
-<!-- 데이터가 있을 때 리스트로 출력 -->
-<ul th:if="${info.techspecs != null}">
-    <li th:each="tech : ${#strings.arraySplit(info.techspecs, ',')}"
-        th:text="${#strings.trim(tech)}">Java</li>
-</ul>
-
-<hr>
-
-<!-- 4. 참여 프로젝트 (세미콜론으로 잘라서 리스트로 출력) -->
-<h3>참여 프로젝트 및 역할</h3>
-<!-- 데이터가 없을 때 -->
-<div th:if="${info.projectAndRole == null || info.projectAndRole.isEmpty()}">
-    <p>참여한 프로젝트가 없습니다.</p>
-</div>
-
-<!-- 데이터가 있을 때 리스트로 출력 -->
-<ul th:if="${info.projectAndRole != null}">
-    <li th:each="proj : ${#strings.arraySplit(info.projectAndRole, ';')}"
-        th:text="${#strings.trim(proj)}">프로젝트명 (팀장)</li>
-</ul>
 
 </body>
 </html>

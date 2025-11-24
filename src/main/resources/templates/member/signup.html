@@ -1,40 +1,62 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"> <head>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
     <meta charset="UTF-8">
-    <title>회원가입</title>
+    <title>AtoZect - 회원가입</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<h1>회원가입</h1>
 
-<form action="/members/signup" method="post" th:object="${signupDto}">
+<div class="container" style="max-width: 500px;">
 
-    <div>
-        <label for="email">이메일</label>
-        <input type="text" th:field="*{email}" placeholder="이메일을 입력하세요">
+    <h1>회원가입</h1>
+    <p class="subtitle">A to Zect와 함께 새로운 여정을 시작하세요.</p>
+
+    <hr>
+
+    <div th:if="${error}" class="error-msg" th:text="${error}">
+        에러 메시지가 여기에 표시됩니다.
     </div>
 
-    <div>
-        <label for="password">비밀번호</label>
-        <input type="password" th:field="*{password}">
+    <form action="/members/signup" method="post" th:object="${signupDto}">
+
+        <div>
+            <label for="email">이메일</label>
+            <input type="email" th:field="*{email}" placeholder="example@email.com" required>
+        </div>
+
+        <div>
+            <label for="password">비밀번호</label>
+            <input type="password" th:field="*{password}" placeholder="비밀번호를 입력하세요" required>
+        </div>
+
+        <div>
+            <label for="confirmPassword">비밀번호 확인</label>
+            <input type="password" th:field="*{confirmPassword}" placeholder="비밀번호를 한 번 더 입력하세요" required>
+        </div>
+
+        <div>
+            <label for="name">이름</label>
+            <input type="text" th:field="*{name}" placeholder="실명을 입력하세요" required>
+        </div>
+
+        <div>
+            <label for="birthDate">생년월일</label>
+            <input type="date" th:field="*{birthDate}" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 20px;">
+            가입하기
+        </button>
+    </form>
+
+    <div style="margin-top: 20px; text-align: center; font-size: 14px;">
+        이미 계정이 있으신가요? <a href="/members/login" style="color: #007bff; font-weight: bold;">로그인</a>
+        <br><br>
+        <a href="/" style="color: #666;">메인으로 돌아가기</a>
     </div>
 
-    <div>
-        <label for="confirmPassword">비밀번호 확인</label>
-        <input type="password" th:field="*{confirmPassword}">
-    </div>
+</div>
 
-    <div>
-        <label for="name">이름</label>
-        <input type="text" th:field="*{name}">
-    </div>
-
-    <div>
-        <label for="birthDate">생년월일</label>
-        <input type="date" th:field="*{birthDate}">
-    </div>
-
-    <button type="submit">가입하기</button>
-</form>
 </body>
 </html>

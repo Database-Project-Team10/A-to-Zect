@@ -4,82 +4,160 @@
     <meta charset="UTF-8">
     <title>AtoZect - Home</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <style>
+        /* 1. 상단 헤더 (로고 + 로그인 버튼) */
+        .header-nav {
+            display: flex;
+            justify-content: space-between; /* 양 끝 정렬 */
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .brand-logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .auth-links a {
+            margin-left: 15px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+        }
+        .auth-links a:hover { color: #007bff; }
+
+        /* 2. 프로젝트 카드 그리드 레이아웃 */
+        .project-grid {
+            display: grid;
+            /* 카드의 최소 너비를 250px로 설정, 화면 크기에 따라 자동 나열 */
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px; /* 카드 사이 간격 */
+            margin-top: 20px;
+        }
+
+        /* 개별 카드 스타일 */
+        .project-card {
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: left;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            height: 100%; /* 높이 맞춤 */
+            text-decoration: none; /* 링크 밑줄 제거 */
+            color: inherit;
+        }
+
+        /* 마우스 올렸을 때 효과 */
+        .project-card:hover {
+            transform: translateY(-5px); /* 살짝 위로 뜸 */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+            border-color: #007bff;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+            flex-grow: 1; /* 내용이 짧아도 하단 여백 채우기 */
+            margin-bottom: 15px;
+        }
+
+        .card-footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .badge-status {
+            background-color: #eef2ff;
+            color: #4f46e5;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+    </style>
 </head>
 <body>
 
 <div class="container">
 
-    <h1>AtoZect에 오신 것을 환영합니다!</h1>
-    <p class="subtitle">프로젝트의 시작과 끝, A to Zect</p>
+    <div class="header-nav">
+        <a href="/" class="brand-logo">AtoZect</a>
 
-    <hr>
+        <div class="auth-links">
+            <span th:if="${session.loginMember == null}">
+                <a href="/members/login">로그인</a>
+                <a href="/members/signup" class="btn btn-primary" style="color:white; padding: 8px 15px; border-radius: 20px;">회원가입</a>
+            </span>
 
-    <div th:if="${session.loginMember == null}">
-        <div style="margin-bottom: 30px;">
-            <p>로그인하고 팀원을 찾아보세요.</p>
-            <a href="/members/login" class="btn btn-primary">로그인</a>
-            <a href="/members/signup" class="btn btn-secondary">회원가입</a>
-        </div>
-    </div>
-
-    <div th:if="${session.loginMember != null}">
-        <h2 style="text-align: center; border: none; margin-top: 0;">
-            반갑습니다, <span th:text="${session.loginMember.name}" style="color: #007bff;">사용자</span>님!
-        </h2>
-
-        <div class="menu-grid">
-            <button class="btn btn-outline btn-block" onclick="location.href='/projects/create'">➕ 프로젝트 생성</button>
-            <button class="btn btn-outline btn-block" onclick="location.href='/projects/my'">📂 내 프로젝트</button>
-            <button class="btn btn-outline btn-block" onclick="location.href='/members/mypage'">👤 내 정보</button>
-        </div>
-
-        <div style="margin-top: 15px; text-align: right;">
-            <a href="/members/logout" style="color: #dc3545; font-size: 14px; font-weight: bold;">로그아웃</a>
+            <span th:if="${session.loginMember != null}">
+                <span style="margin-right: 10px; color: #333;">
+                    👋 <strong th:text="${session.loginMember.name}">사용자</strong>님
+                </span>
+                <a href="/members/mypage">내 정보</a>
+                <a href="/members/logout" style="color: #dc3545;">로그아웃</a>
+            </span>
         </div>
     </div>
 
 
-    <div class="project-section">
-        <h3>📋 실시간 프로젝트 목록</h3>
+    <div style="text-align: center; margin-bottom: 40px;">
+        <h1>프로젝트의 시작과 끝</h1>
+        <p class="subtitle">팀원을 찾고, 아이디어를 실현하세요.</p>
 
-        <table>
-            <thead>
-            <tr>
-                <th style="width: 10%">ID</th>
-                <th style="width: 60%">제목</th>
-                <th style="width: 30%">기능</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:if="${projects == null || projects.isEmpty()}">
-                <td colspan="3" class="empty-message">
-                    등록된 프로젝트가 없습니다.
-                </td>
-            </tr>
+        <div th:if="${session.loginMember != null}" class="menu-grid" style="max-width: 600px; margin: 0 auto;">
+            <button class="btn btn-outline" onclick="location.href='/projects/create'">➕ 프로젝트 생성</button>
+            <button class="btn btn-outline" onclick="location.href='/projects/my'">📂 내 프로젝트</button>
+        </div>
+    </div>
 
-            <tr th:each="project : ${projects}">
-                <td style="text-align: center;" th:text="${project.id}">1</td>
-                <td>
-                    <a th:href="@{/projects/{id}(id=${project.id})}"
-                       style="font-weight: bold; color: #333;"
-                       th:text="${project.title}">제목</a>
-                    <br>
-                    <span style="font-size: 13px; color: #888;"
-                          th:text="${#strings.abbreviate(project.description, 30)}">설명...</span>
-                </td>
-                <td style="text-align: center;">
-                    <button class="btn btn-outline"
-                            style="padding: 6px 12px; font-size: 13px;"
-                            th:onclick="|location.href='@{/projects/{id}(id=${project.id})}'|">
-                        상세보기
-                    </button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+    <div class="project-section" style="border-top: none;"> <div style="display: flex; justify-content: space-between; align-items: end; margin-bottom: 15px;">
+        <h3 style="margin: 0; border: none; padding: 0;">📋 최신 프로젝트</h3>
+        <a href="/projects" style="font-size: 14px; color: #666;">전체보기 ></a>
+    </div>
 
-        <div class="text-right" style="margin-top: 15px;">
-            <a href="/projects" style="color: #666; font-size: 14px;">전체 목록 더보기 ></a>
+        <div class="project-grid">
+
+            <div th:if="${projects == null || projects.isEmpty()}"
+                 style="grid-column: 1 / -1; text-align: center; padding: 40px; background: #f9f9f9; border-radius: 10px; color: #888;">
+                아직 등록된 프로젝트가 없습니다.<br>첫 번째 프로젝트를 생성해보세요!
+            </div>
+
+            <a th:each="project : ${projects}"
+               th:href="@{/projects/{id}(id=${project.id})}"
+               class="project-card">
+
+                <span class="card-title" th:text="${project.title}">프로젝트 제목</span>
+
+                <p class="card-desc"
+                   th:text="${#strings.abbreviate(project.description, 50)}">
+                    프로젝트 설명이 들어갑니다...
+                </p>
+
+                <div class="card-footer">
+                    <span class="badge-status">모집중</span>
+                    <span>상세보기 →</span>
+                </div>
+            </a>
+
         </div>
     </div>
 

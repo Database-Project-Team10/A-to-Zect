@@ -1,112 +1,80 @@
 package knu.atoz.mbti.project;
 
+import jakarta.servlet.http.HttpSession;
 import knu.atoz.mbti.MbtiDimension;
-import knu.atoz.mbti.exception.MbtiException;
+import knu.atoz.mbti.project.dto.ProjectMbtiUpdateDto;
+import knu.atoz.member.Member;
 import knu.atoz.project.Project;
-import knu.atoz.utils.InputUtil;
+import knu.atoz.project.ProjectService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 
+@Controller
+@RequestMapping("/projects/{projectId}/mbti")
+@RequiredArgsConstructor
 public class ProjectMbtiController {
 
     private final ProjectMbtiService projectMbtiService;
-    private final Scanner scanner;
+    private final ProjectService projectService;
 
-    public ProjectMbtiController(
-            ProjectMbtiService projectMbtiService,
-            Scanner scanner
-    ) {
-        this.projectMbtiService = projectMbtiService;
-        this.scanner = scanner;
-    }
+    // 1. MBTI 수정 화면 (GET)
+    @GetMapping
+    public String showMbtiForm(@PathVariable Long projectId,
+                               HttpSession session,
+                               Model model) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) return "redirect:/members/login";
 
-    public void showProjectMbtiMenu(Project currentProject) {
-
-        while (true) {
-            System.out.println("\n---------- [" + currentProject.getTitle() + "] 희망 MBTI 관리 ----------");
-
-            try {
-                List<MbtiDimension> dimensions = projectMbtiService.getMbtiDimensions();
-                Map<Long, String> currentMbti = projectMbtiService.getMbtiMapByProjectId(currentProject.getId());
-
-                printCurrentMbti(dimensions, currentMbti);
-
-                System.out.println("1. 희망 MBTI 수정");
-                System.out.println("b. 뒤로 가기 (상세 메뉴)");
-                System.out.print("메뉴를 선택하세요: ");
-                String choice = scanner.nextLine();
-
-                switch (choice) {
-                    case "1":
-                        Map<Long, String> newMbtiMap = promptMbtiDimensions(dimensions);
-                        projectMbtiService.saveProjectMbti(currentProject.getId(), newMbtiMap);
-                        System.out.println("프로젝트 선호 MBTI가 성공적으로 저장되었습니다.");
-                        break;
-
-                    case "b":
-                        return;
-
-                    default:
-                        System.out.println("잘못된 입력입니다.");
-                }
-            } catch (InputUtil.CancelException e) {
-                System.out.println("\n[!] 작업이 취소되었습니다."); // 수정 메뉴에서의 취소 처리
-            }catch (MbtiException e) {
-                System.out.println("MBTI 처리 중 오류가 발생했습니다: " + e.getMessage());
-            } catch (Exception e) {
-                System.out.println("알 수 없는 오류가 발생했습니다.");
-            }
-        }
-    }
-
-    private void printCurrentMbti(List<MbtiDimension> dimensions,
-                                  Map<Long, String> currentMbti) {
-        System.out.print("현재 설정된 선호 MBTI: ");
-        for (MbtiDimension dim : dimensions) {
-            System.out.print(currentMbti.getOrDefault(dim.getId(), "?"));
-        }
-        System.out.println();
-    }
-
-
-    private Map<Long, String> promptMbtiDimensions(List<MbtiDimension> dimensions) {
-        Map<Long, String> newMbtiMap = new HashMap<>();
-
-        for (MbtiDimension dim : dimensions) {
-
-            while (true) {
-                String prompt = String.format("%d. %s (%s/%s)",
-                        dim.getId(), dim.getDimensionType(), dim.getOption1(), dim.getOption2());
-
-                String input = InputUtil.getInput(scanner, prompt).toUpperCase();
-
-                if (input.equals(dim.getOption1()) || input.equals(dim.getOption2())) {
-                    newMbtiMap.put(dim.getId(), input);
-                    break;
-                } else {
-                    System.out.printf("잘못된 입력입니다. %s 또는 %s를 입력해주세요.\n",
-                            dim.getOption1(), dim.getOption2());
-                }
-            }
-        }
-
-        return newMbtiMap;
-    }
-
-    public Map<Long, String> inputMbti() {
         try {
+            // (1) 권한 체크 및 프로젝트 정보
+            Project project = projectService.getMyProjectById(loginMember.getId(), projectId);
+            model.addAttribute("project", project);
+
+            // (2) MBTI 차원 정보 (E/I, S/N...)
             List<MbtiDimension> dimensions = projectMbtiService.getMbtiDimensions();
-            System.out.println("\n---------- 선호 MBTI 입력 ----------");
-            System.out.println("(4가지 차원을 모두 입력합니다.)");
+            model.addAttribute("dimensions", dimensions);
 
-            return promptMbtiDimensions(dimensions);
+            // (3) 현재 설정된 MBTI 값 가져오기
+            Map<Long, String> currentMbti = projectMbtiService.getMbtiMapByProjectId(projectId);
 
-        } catch (MbtiException e) {
-            System.out.println("MBTI 데이터 오류: " + e.getMessage());
-            return new HashMap<>();
+            // (4) DTO에 담기
+            ProjectMbtiUpdateDto dto = new ProjectMbtiUpdateDto();
+            dto.setMbtiMap(currentMbti);
+            model.addAttribute("mbtiDto", dto);
+
+            return "project/mbti";
+
+        } catch (Exception e) {
+            return "redirect:/projects/my?error=" + encode(e.getMessage());
         }
+    }
+
+    // 2. MBTI 저장 (POST)
+    @PostMapping
+    public String saveMbti(@PathVariable Long projectId,
+                           @ModelAttribute ProjectMbtiUpdateDto dto,
+                           HttpSession session) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) return "redirect:/members/login";
+
+        try {
+            // 저장 서비스 호출
+            projectMbtiService.saveProjectMbti(projectId, dto.getMbtiMap());
+            return "redirect:/projects/" + projectId; // 상세 페이지로 이동
+
+        } catch (Exception e) {
+            return "redirect:/projects/" + projectId + "/mbti?error=" + encode(e.getMessage());
+        }
+    }
+
+    private String encode(String text) {
+        return URLEncoder.encode(text, StandardCharsets.UTF_8);
     }
 }

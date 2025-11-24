@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>내 MBTI 설정</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .mbti-card {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .mbti-title {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            width: 120px;
+        }
+        .radio-group {
+            display: flex;
+            gap: 10px;
+            flex-grow: 1;
+            justify-content: center;
+        }
+
+        /* 라디오 버튼 커스텀 (버튼처럼 보이게) */
+        input[type="radio"] { display: none; }
+
+        input[type="radio"] + label {
+            display: inline-block;
+            width: 80px;
+            padding: 10px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #555;
+            transition: 0.2s;
+        }
+
+        /* 선택되었을 때 스타일 */
+        input[type="radio"]:checked + label {
+            background-color: #eef2ff;
+            color: #4f46e5;
+            border-color: #4f46e5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" style="max-width: 600px;">
+
+    <h1>내 MBTI 설정</h1>
+    <p class="subtitle">나의 성향을 정확히 입력할수록 팀 매칭 확률이 올라갑니다.</p>
+    <hr>
+
+    <form action="/members/mbti" method="post" th:object="${mbtiDto}">
+
+        <div th:each="dim : ${dimensions}" class="mbti-card">
+
+            <div class="mbti-title" th:text="${dim.dimensionType}">에너지 방향</div>
+
+            <div class="radio-group">
+                <input type="radio"
+                       th:field="*{mbtiMap[__${dim.id}__]}"
+                       th:value="${dim.option1}"
+                       th:id="'opt1-' + ${dim.id}">
+                <label th:for="'opt1-' + ${dim.id}" th:text="${dim.option1}">E</label>
+
+                <input type="radio"
+                       th:field="*{mbtiMap[__${dim.id}__]}"
+                       th:value="${dim.option2}"
+                       th:id="'opt2-' + ${dim.id}">
+                <label th:for="'opt2-' + ${dim.id}" th:text="${dim.option2}">I</label>
+            </div>
+
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button type="submit" class="btn btn-primary btn-block">저장하기</button>
+            <a href="/members/mypage" class="btn btn-secondary btn-block" style="text-align: center; margin-top: 10px;">취소</a>
+        </div>
+    </form>
+
+</div>
+
+</body>
+</html>

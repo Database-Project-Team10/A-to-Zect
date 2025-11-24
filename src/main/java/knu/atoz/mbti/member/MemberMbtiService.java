@@ -4,10 +4,12 @@ import knu.atoz.mbti.MbtiDimension;
 import knu.atoz.mbti.MbtiRepository;
 import knu.atoz.mbti.exception.InvalidMbtiException;
 import knu.atoz.mbti.exception.MbtiNotFoundException;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 
+@Service
 public class MemberMbtiService {
 
     private final MbtiRepository mbtiRepository;

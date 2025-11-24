@@ -113,12 +113,12 @@
     </div>
 
     <div class="info-card">
-        <h3 style="margin-top: 0; border-left: none; padding-left: 0;">🧠 MBTI & 기술</h3>
-
+        <h3 style="margin-top: 0; border-left: none; padding-left: 0;">🧠 MBTI & Tech Stack</h3>
         <div style="margin-bottom: 20px;">
             <div style="font-size: 13px; color: #888; margin-bottom: 5px;">나의 MBTI</div>
             <span th:if="${info.mbti != null}" class="mbti-badge" th:text="${info.mbti}">ENTP</span>
             <span th:if="${info.mbti == null}" style="color: #999;">등록된 MBTI가 없습니다.</span>
+            <a href="/members/mbti" class="btn btn-outline" style="font-size: 12px; padding: 5px 10px;">수정</a>
         </div>
 
         <div>

@@ -2,6 +2,7 @@ package knu.atoz.mbti.member;
 
 import knu.atoz.mbti.MbtiDimension;
 import knu.atoz.utils.Azconnection;
+import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
+@Repository
 public class MemberMbtiRepository {
 
     public List<MbtiDimension> findAllMbtiDimensions() {

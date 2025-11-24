@@ -86,17 +86,17 @@ public class ProjectService {
         Connection conn = null;
         try {
             conn = Azconnection.getConnection();
-            conn.setAutoCommit(false); // 트랜잭션 시작
+            conn.setAutoCommit(false); 
 
-            // 1. Project 생성
+            
             Project newProject = projectRepository.save(conn, new Project(requestDto.getTitle(), requestDto.getDescription(), requestDto.getMaxCount()));
 
-            // 2. Participant 추가
+            
             participantRepository.saveLeader(conn, requestDto.getMemberId(), newProject.getId());
 
-            // 3. 스택 저장
+            
             if (!requestDto.getTechSpecs().isEmpty()) {
-                //System.out.println("\n[DB 저장 시작 - 스택]");
+                
                 for (String techName : requestDto.getTechSpecs()) {
                     Techspec techspec = techspecRepository.findTechspecIdByName(techName);
                     Long techspecId = null;
@@ -110,9 +110,9 @@ public class ProjectService {
                 }
             }
 
-            // 4. MBTI 저장
+            
             if (!requestDto.getMbtiMap().isEmpty()) {
-                //System.out.println("[DB 저장 시작 - MBTI]");
+                
                 projectMbtiRepository.saveProjectMbti(conn, newProject.getId(), requestDto.getMbtiMap());
             }
 

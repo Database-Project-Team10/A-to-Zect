@@ -20,20 +20,20 @@ public class MemberTechspecController {
 
     private final MemberTechspecService memberTechspecService;
 
-    // 1. 내 기술 스택 관리 페이지 (목록 + 추가 폼)
+    
     @GetMapping
     public String showTechspecManagePage(HttpSession session, Model model) {
         Member loginMember = (Member) session.getAttribute("loginMember");
         if (loginMember == null) return "redirect:/members/login";
 
-        // 내 스택 목록 조회
+        
         List<Techspec> myTechspecs = memberTechspecService.getMyTechspecs(loginMember.getId());
         model.addAttribute("techspecs", myTechspecs);
 
-        return "member/techspec"; // 뷰 파일 이름
+        return "member/techspec"; 
     }
 
-    // 2. 스택 추가 (POST)
+    
     @PostMapping("/add")
     public String addTechspec(@RequestParam String techName, HttpSession session) {
         Member loginMember = (Member) session.getAttribute("loginMember");
@@ -47,7 +47,7 @@ public class MemberTechspecController {
         }
     }
 
-    // 3. 스택 삭제 (POST)
+    
     @PostMapping("/{techspecId}/delete")
     public String removeTechspec(@PathVariable Long techspecId, HttpSession session) {
         Member loginMember = (Member) session.getAttribute("loginMember");

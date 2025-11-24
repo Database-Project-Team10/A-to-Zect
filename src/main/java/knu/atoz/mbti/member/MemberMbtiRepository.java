@@ -72,7 +72,7 @@ public class MemberMbtiRepository {
         Connection conn = null;
         try {
             conn = Azconnection.getConnection();
-            conn.setAutoCommit(false); // [!] Repository에서 트랜잭션 시작
+            conn.setAutoCommit(false); 
 
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 for (Map.Entry<Long, String> entry : mbtiMap.entrySet()) {
@@ -83,13 +83,13 @@ public class MemberMbtiRepository {
                 }
             }
 
-            conn.commit(); // [!] 트랜잭션 성공
+            conn.commit(); 
             return true;
 
         } catch (SQLException e) {
             System.err.println("DB 저장 중 오류 발생: " + e.getMessage());
             try {
-                if (conn != null) conn.rollback(); // [!] 트랜잭션 실패
+                if (conn != null) conn.rollback(); 
             } catch (SQLException ex) {
                 System.err.println("Rollback 실패: " + ex.getMessage());
             }

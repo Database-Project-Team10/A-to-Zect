@@ -14,16 +14,16 @@ public class MemberRepository {
     public Member findByEmail(String email) {
         String sql = "SELECT * FROM member WHERE email = ?";
 
-        // try-with-resources: conn, pstmt, rs가 자동으로 close() 됩니다.
+        
         try (Connection conn = Azconnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, email);
 
             try (ResultSet rs = pstmt.executeQuery()) {
-                // 결과가 있다면 (rs.next())
+                
                 if (rs.next()) {
-                    // 찾은 정보로 Member 객체를 생성하여 반환
+                    
                     return new Member(
                             rs.getLong("id"),
                             rs.getString("email"),
@@ -38,7 +38,7 @@ public class MemberRepository {
             System.err.println("DB 조회 중 오류 발생: " + e.getMessage());
         }
 
-        // 일치하는 사용자가 없으면 null을 반환
+        
         return null;
     }
 
@@ -50,9 +50,9 @@ public class MemberRepository {
             pstmt.setLong(1, id);
 
             try (ResultSet rs = pstmt.executeQuery()) {
-                // 결과가 있다면 (rs.next())
+                
                 if (rs.next()) {
-                    // 찾은 정보로 Member 객체를 생성하여 반환
+                    
                     return new Member(
                             rs.getLong("id"),
                             rs.getString("email"),
@@ -88,7 +88,7 @@ public class MemberRepository {
                 throw new SQLException("회원 저장 실패: 영향받은 행이 없음");
             }
 
-            // 생성된 ID 조회
+            
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
                 if (rs.next()) {
                     return new Member(
@@ -111,7 +111,7 @@ public class MemberRepository {
     }
 
     public boolean updatePassword(Long id, String newPassword) {
-        // [SQL] username을 기준으로 password를 업데이트합니다.
+        
         String sql = "UPDATE member SET password = ? WHERE id = ?";
 
         try (Connection conn = Azconnection.getConnection();
@@ -120,18 +120,18 @@ public class MemberRepository {
             pstmt.setString(1, newPassword);
             pstmt.setLong(2, id);
 
-            // 쿼리 실행 (영향받은 행의 수 반환)
+            
             int affectedRows = pstmt.executeUpdate();
 
             if (affectedRows > 0) {
-                return true; // 1개 이상의 행이 변경되었으면 성공
+                return true; 
             }
 
         } catch (SQLException e) {
             System.err.println("DB 업데이트 중 오류 발생: " + e.getMessage());
         }
 
-        return false; // 업데이트 실패
+        return false; 
     }
 
     public boolean delete(Long id){
@@ -151,7 +151,7 @@ public class MemberRepository {
             System.err.println("DB 업데이트 중 오류 발생: " + e.getMessage());
         }
 
-        return false; // 업데이트 실패
+        return false; 
     }
 
     public MemberInfoResponseDto getAllInfoById(Long id) {
@@ -169,7 +169,7 @@ public class MemberRepository {
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    // MemberInfoResponseDto 생성 (projects는 일단 null로 둠)
+                    
                     return new MemberInfoResponseDto(
                             rs.getLong("id"),
                             rs.getString("name"),
@@ -177,7 +177,7 @@ public class MemberRepository {
                             rs.getObject("birth_date", LocalDate.class),
                             rs.getString("mbti"),
                             rs.getString("tech_specs"),
-                            null // 프로젝트 리스트는 별도로 채울 예정
+                            null 
                     );
                 }
             }

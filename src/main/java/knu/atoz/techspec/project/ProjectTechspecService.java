@@ -20,12 +20,12 @@ public class ProjectTechspecService {
     private final TechspecRepository techspecRepository;
     private final ProjectTechspecRepository projectTechspecRepository;
 
-    // [변경] Project 객체 대신 ID를 받도록 수정 (오버로딩)
+    
     public List<Techspec> getProjectTechspecs(Long projectId) {
         return projectTechspecRepository.findTechspecsByProjectId(projectId);
     }
 
-    // [변경] Project 객체 대신 ID를 받음
+    
     public void addTechspecToProject(Long projectId, String techName) {
 
         if (techName == null || techName.isBlank()) {
@@ -35,9 +35,9 @@ public class ProjectTechspecService {
         Connection conn = null;
         try {
             conn = Azconnection.getConnection();
-            conn.setAutoCommit(false); // 트랜잭션 시작
+            conn.setAutoCommit(false); 
 
-            // 1. 기술 스택이 DB에 있는지 확인 (없으면 생성)
+            
             Techspec techspec = techspecRepository.findTechspecIdByName(techName);
             Long techspecId;
 
@@ -47,21 +47,21 @@ public class ProjectTechspecService {
                 techspecId = techspec.getId();
             }
 
-            // 2. 프로젝트-기술스택 연결 테이블에 추가
+            
             boolean inserted = projectTechspecRepository.addProjectTechspec(
                     conn, projectId, techspecId
             );
 
             if (!inserted) {
-                // 이미 연결되어 있는 경우 등
+                
                 throw new TechspecAlreadyExistsException("이미 추가된 스택입니다.");
             }
 
-            conn.commit(); // 커밋
+            conn.commit(); 
 
         } catch (SQLException e) {
             rollbackQuietly(conn);
-            // 오라클 무결성 제약조건 에러 코드(1) 체크
+            
             if (e.getErrorCode() == 1) {
                 throw new TechspecAlreadyExistsException("이미 존재하는 스택입니다.");
             }
@@ -71,7 +71,7 @@ public class ProjectTechspecService {
         }
     }
 
-    // [변경] Project 객체 대신 ID를 받음
+    
     public void removeTechspecFromProject(Long projectId, Long techspecId) {
         if (!projectTechspecRepository.deleteProjectTechspec(projectId, techspecId)) {
             throw new TechspecNotFoundException("삭제할 스택이 존재하지 않습니다.");

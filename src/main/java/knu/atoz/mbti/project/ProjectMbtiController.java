@@ -24,7 +24,7 @@ public class ProjectMbtiController {
     private final ProjectMbtiService projectMbtiService;
     private final ProjectService projectService;
 
-    // 1. MBTI 수정 화면 (GET)
+    
     @GetMapping
     public String showMbtiForm(@PathVariable Long projectId,
                                HttpSession session,
@@ -33,18 +33,18 @@ public class ProjectMbtiController {
         if (loginMember == null) return "redirect:/members/login";
 
         try {
-            // (1) 권한 체크 및 프로젝트 정보
+            
             Project project = projectService.getMyProjectById(loginMember.getId(), projectId);
             model.addAttribute("project", project);
 
-            // (2) MBTI 차원 정보 (E/I, S/N...)
+            
             List<MbtiDimension> dimensions = projectMbtiService.getMbtiDimensions();
             model.addAttribute("dimensions", dimensions);
 
-            // (3) 현재 설정된 MBTI 값 가져오기
+            
             Map<Long, String> currentMbti = projectMbtiService.getMbtiMapByProjectId(projectId);
 
-            // (4) DTO에 담기
+            
             ProjectMbtiUpdateDto dto = new ProjectMbtiUpdateDto();
             dto.setMbtiMap(currentMbti);
             model.addAttribute("mbtiDto", dto);
@@ -56,7 +56,7 @@ public class ProjectMbtiController {
         }
     }
 
-    // 2. MBTI 저장 (POST)
+    
     @PostMapping
     public String saveMbti(@PathVariable Long projectId,
                            @ModelAttribute ProjectMbtiUpdateDto dto,
@@ -65,9 +65,9 @@ public class ProjectMbtiController {
         if (loginMember == null) return "redirect:/members/login";
 
         try {
-            // 저장 서비스 호출
+            
             projectMbtiService.saveProjectMbti(projectId, dto.getMbtiMap());
-            return "redirect:/projects/" + projectId; // 상세 페이지로 이동
+            return "redirect:/projects/" + projectId; 
 
         } catch (Exception e) {
             return "redirect:/projects/" + projectId + "/mbti?error=" + encode(e.getMessage());

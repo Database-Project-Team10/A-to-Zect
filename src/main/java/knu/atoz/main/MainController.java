@@ -20,7 +20,6 @@ public class MainController {
     public String index(Model model) {
         List<Project> projectList = projectService.getProjectList(10);
 
-        // "projects"라는 이름으로 HTML에 전달
         model.addAttribute("projects", projectList);
 
         return "index";

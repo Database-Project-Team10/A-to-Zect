@@ -21,9 +21,9 @@ import java.util.List;
 public class ProjectTechspecController {
 
     private final ProjectTechspecService projectTechspecService;
-    private final ProjectService projectService; // 프로젝트 정보 확인용
+    private final ProjectService projectService; 
 
-    // 1. 관리 페이지 보여주기 (목록 + 추가폼)
+    
     @GetMapping
     public String showManagePage(@PathVariable Long projectId,
                                  HttpSession session,
@@ -32,22 +32,22 @@ public class ProjectTechspecController {
         if (loginMember == null) return "redirect:/members/login";
 
         try {
-            // 본인 프로젝트인지 등 권한 체크 및 프로젝트 정보 조회
+            
             Project project = projectService.getMyProjectById(loginMember.getId(), projectId);
             model.addAttribute("project", project);
 
-            // 현재 등록된 기술 스택 목록 조회
+            
             List<Techspec> techspecs = projectTechspecService.getProjectTechspecs(projectId);
             model.addAttribute("techspecs", techspecs);
 
-            return "project/techspec"; // 뷰 이름
+            return "project/techspec"; 
 
         } catch (Exception e) {
             return "redirect:/projects/my?error=" + encode(e.getMessage());
         }
     }
 
-    // 2. 기술 스택 추가 (POST)
+    
     @PostMapping("/add")
     public String addTechspec(@PathVariable Long projectId,
                               @RequestParam String techName,
@@ -56,7 +56,7 @@ public class ProjectTechspecController {
         if (loginMember == null) return "redirect:/members/login";
 
         try {
-            // 서비스 호출
+            
             projectTechspecService.addTechspecToProject(projectId, techName.trim());
             return "redirect:/projects/" + projectId + "/techspecs";
 
@@ -65,7 +65,7 @@ public class ProjectTechspecController {
         }
     }
 
-    // 3. 기술 스택 삭제 (POST)
+    
     @PostMapping("/{techspecId}/delete")
     public String removeTechspec(@PathVariable Long projectId,
                                  @PathVariable Long techspecId,
@@ -82,7 +82,7 @@ public class ProjectTechspecController {
         }
     }
 
-    // 한글 인코딩 헬퍼 메서드
+    
     private String encode(String text) {
         return URLEncoder.encode(text, StandardCharsets.UTF_8);
     }

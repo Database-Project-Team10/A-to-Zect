@@ -91,7 +91,7 @@ public class ProjectMbtiRepository {
                 "  INSERT (project_id, mbti_id, preferred_option) " +
                 "  VALUES (src.p_id, src.b_id, src.pre_opt)";
 
-        // 전달받은 conn을 사용
+        
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             for (Map.Entry<Long, String> entry : mbtiMap.entrySet()) {
                 pstmt.setLong(1, projectId);

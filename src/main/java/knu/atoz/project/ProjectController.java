@@ -36,13 +36,13 @@ public class ProjectController {
 
         List<Project> projectList = projectService.getAllProjects();
 
-        // "projects"라는 이름으로 HTML에 전달
+        
         model.addAttribute("projects", projectList);
 
         return "project/list";
     }
 
-    // 2. 프로젝트 생성 '페이지' 보여주기 (GET /projects/create)
+    
     @GetMapping("/create")
     public String showCreateForm(HttpSession session, Model model) {
         Member loginMember = (Member) session.getAttribute("loginMember");
@@ -54,7 +54,7 @@ public class ProjectController {
         return "project/create";
     }
 
-    // 3. 프로젝트 생성 '처리' (POST /projects/create)
+    
     @PostMapping("/create")
     public String createProject(@ModelAttribute ProjectCreateRequestDto dto,
                                 HttpSession session,
@@ -65,22 +65,22 @@ public class ProjectController {
         }
 
         try {
-            // 작성자 ID 주입
+            
             dto.setMemberId(loginMember.getId());
 
-            // 서비스 호출 (DTO 안에 테크스펙, MBTI 정보가 다 들어있다고 가정)
+            
             projectService.createProject(dto);
 
-            return "redirect:/"; // 목록으로 이동
+            return "redirect:/"; 
 
         } catch (ProjectException e) {
             model.addAttribute("error", e.getMessage());
-            model.addAttribute("projectDto", dto); // 입력했던 내용 유지
+            model.addAttribute("projectDto", dto); 
             return "project/create";
         }
     }
 
-    // 4. 프로젝트 참여하기 (POST /projects/{id}/join)
+    
     @PostMapping("/{projectId}/join")
     public String joinProject(@PathVariable Long projectId,
                               HttpSession session,
@@ -92,14 +92,14 @@ public class ProjectController {
 
         try {
             participantService.joinProject(projectId, loginMember.getId());
-            return "redirect:/projects/my"; // '내 프로젝트' 목록으로 이동
+            return "redirect:/projects/my"; 
         } catch (ParticipantException | ProjectException e) {
-            // 에러 발생 시 목록 페이지로 돌아가면서 에러 파라미터 전달 (간단한 처리)
+            
             return "redirect:/projects?error=" + e.getMessage();
         }
     }
 
-    // 5. 내가 참여 중인 프로젝트 보기 (GET /projects/my)
+    
     @GetMapping("/my")
     public String showMyProjects(HttpSession session, Model model) {
         Member loginMember = (Member) session.getAttribute("loginMember");
@@ -107,14 +107,14 @@ public class ProjectController {
             return "redirect:/members/login";
         }
 
-        // DTO 리스트를 받아옴
+        
         List<MyProjectResponseDto> myProjects = projectService.getMyProjectListAndRole(loginMember.getId());
         model.addAttribute("projects", myProjects);
 
         return "project/my-list";
     }
 
-    // 6. 프로젝트 삭제 (POST /projects/{id}/delete)
+    
     @PostMapping("/{projectId}/delete")
     public String deleteProject(@PathVariable Long projectId, HttpSession session) {
         Member loginMember = (Member) session.getAttribute("loginMember");
@@ -122,11 +122,11 @@ public class ProjectController {
             return "redirect:/members/login";
         }
 
-        // 본인 확인 로직은 Service 내부 혹은 여기서 처리
+        
         try {
             projectService.deleteProject(projectId, loginMember.getId());
         } catch (Exception e) {
-            // 삭제 실패 시 처리 (생략)
+            
         }
 
         return "redirect:/projects/my";
@@ -207,7 +207,7 @@ public class ProjectController {
 
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
-            model.addAttribute("updateDto", dto); // 입력했던 내용 유지
+            model.addAttribute("updateDto", dto); 
             model.addAttribute("projectId", projectId);
             return "project/edit";
         }
@@ -226,20 +226,20 @@ public class ProjectController {
         }
     }
 
-    // [2] 신청자 관리 페이지 (LEADER 전용)
+    
     @GetMapping("/{projectId}/manage")
     public String manageParticipants(@PathVariable Long projectId, HttpSession session, Model model) {
         Member loginMember = (Member) session.getAttribute("loginMember");
         if (loginMember == null) return "redirect:/members/login";
 
         try {
-            // 1. 리더 권한 체크 (서비스 내부 혹은 여기서 수행)
+            
             String myRole = participantService.getMyRole(projectId, loginMember.getId());
             if (!"LEADER".equals(myRole)) {
                 throw new RuntimeException("관리자 권한이 없습니다.");
             }
 
-            // 2. 프로젝트 정보 및 대기자 목록 조회
+            
             Project project = projectService.getProject(projectId);
             List<Member> pendingMembers = participantService.getPendingMembers(projectId);
 
@@ -253,12 +253,12 @@ public class ProjectController {
         }
     }
 
-    // [3] 신청 수락 (PENDING -> MEMBER)
+    
     @PostMapping("/{projectId}/accept/{targetMemberId}")
     public String acceptMember(@PathVariable Long projectId,
                                @PathVariable Long targetMemberId,
                                HttpSession session) {
-        // 리더 체크 생략 (Service나 앞단에서 처리한다고 가정, 보안상 추가하는 게 좋음)
+        
         try {
             participantService.acceptMember(projectId, targetMemberId);
             return "redirect:/projects/" + projectId + "/manage";
@@ -267,7 +267,7 @@ public class ProjectController {
         }
     }
 
-    // [4] 신청 거절 (삭제)
+    
     @PostMapping("/{projectId}/reject/{targetMemberId}")
     public String rejectMember(@PathVariable Long projectId,
                                @PathVariable Long targetMemberId) {

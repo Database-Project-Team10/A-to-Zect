@@ -189,7 +189,7 @@ public class ProjectRepository {
                 if (generatedKeys.next()) {
                     Long generatedId = generatedKeys.getLong(1);
 
-                    // 새로운 Project 객체 생성 후 반환
+                    
                     return new Project(
                             generatedId,
                             project.getTitle(),
@@ -219,11 +219,11 @@ public class ProjectRepository {
             pstmt.setTimestamp(4, java.sql.Timestamp.valueOf(project.getModifiedAt()));
             pstmt.setLong(5, project.getId());
 
-            // 쿼리 실행 (영향받은 행의 수 반환)
+            
             int affectedRows = pstmt.executeUpdate();
 
             if (affectedRows > 0) {
-                return true; // 1개 이상의 행이 변경되었으면 성공
+                return true; 
             }
 
         } catch (SQLException e) {
@@ -241,7 +241,7 @@ public class ProjectRepository {
 
             pstmt.setLong(1, projectId);
 
-            // 쿼리 실행 (영향받은 행의 수 반환)
+            
             int affectedRows = pstmt.executeUpdate();
 
             if (affectedRows > 0) {
@@ -311,7 +311,7 @@ public class ProjectRepository {
         }
     }
 
-    // 인원수 증가 (트랜잭션용 Connection 받는 버전)
+    
     public void incrementCurrentCount(Connection conn, Long projectId) throws SQLException {
         String sql = "UPDATE Project SET current_count = current_count + 1 WHERE id = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {

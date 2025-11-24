@@ -29,7 +29,7 @@ public class ProjectMbtiService {
         if (projectId == null) throw new InvalidMbtiException("프로젝트 ID가 필요합니다.");
 
         Map<Long, String> map = projectMbtiRepository.findMbtiMapByProjectId(projectId);
-        // 맵이 없으면 빈 맵 반환 (수정 폼에서 에러 안 나게)
+        
         return map != null ? map : new java.util.HashMap<>();
     }
 

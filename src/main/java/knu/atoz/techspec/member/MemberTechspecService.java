@@ -18,12 +18,12 @@ public class MemberTechspecService {
     private final TechspecRepository techspecRepository;
     private final MemberTechspecRepository memberTechspecRepository;
 
-    // [변경] Member 객체 대신 ID 사용
+    
     public List<Techspec> getMyTechspecs(Long memberId) {
         return memberTechspecRepository.findTechspecsByMemberId(memberId);
     }
 
-    // [변경] Member 객체 대신 ID 사용, DTO 대신 String 직접 받기 (단일 필드라 더 편함)
+    
     public void addTechspec(Long memberId, String techName) {
 
         if (techName == null || techName.isBlank()) {
@@ -33,9 +33,9 @@ public class MemberTechspecService {
         Connection conn = null;
         try {
             conn = Azconnection.getConnection();
-            conn.setAutoCommit(false); // 트랜잭션 시작
+            conn.setAutoCommit(false); 
 
-            // 1. 기술 스택 존재 확인 및 생성
+            
             Techspec techspec = techspecRepository.findTechspecIdByName(techName);
             Long techspecId;
 
@@ -45,8 +45,8 @@ public class MemberTechspecService {
                 techspecId = techspec.getId();
             }
 
-            // 2. 멤버-기술스택 연결
-            // (Repository 메서드가 Long id를 반환한다고 가정)
+            
+            
             if (memberTechspecRepository.addMemberTechspec(conn, memberId, techspecId) == null) {
                 throw new TechspecAlreadyExistsException("이미 추가된 스택입니다.");
             }
@@ -55,7 +55,7 @@ public class MemberTechspecService {
 
         } catch (SQLException e) {
             rollbackQuietly(conn);
-            // 오라클 PK/Unique 제약조건 위반 (에러코드 1)
+            
             if (e.getErrorCode() == 1) {
                 throw new TechspecAlreadyExistsException("이미 존재하는 스택입니다.");
             }
@@ -66,7 +66,7 @@ public class MemberTechspecService {
         }
     }
 
-    // [변경] Member 객체 대신 ID 사용
+    
     public void removeTechspec(Long memberId, Long techspecId) {
         if (techspecId == null || techspecId <= 0) {
             throw new TechspecInvalidException("유효하지 않은 스택 ID입니다.");

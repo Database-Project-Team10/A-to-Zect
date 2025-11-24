@@ -26,7 +26,7 @@ public class MemberTechspecRepository {
         try (Connection conn = Azconnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setLong(1, memberId); // SQL의 '?'에 파라미터 바인딩
+            pstmt.setLong(1, memberId); 
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {

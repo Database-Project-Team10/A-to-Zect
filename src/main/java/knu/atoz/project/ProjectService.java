@@ -47,8 +47,8 @@ public class ProjectService {
         return projectRepository.findProjects(cnt);
     }
 
-    public List<Project> getMyProjectList(Member currentMember) {
-        return projectRepository.findProjectsByMemberId(currentMember.getId());
+    public List<Project> getMyProjectList(Long memberId) {
+        return projectRepository.findProjectsByMemberId(memberId);
     }
 
     public List<Project> getMyLeaderProjectList(Member currentMember) {

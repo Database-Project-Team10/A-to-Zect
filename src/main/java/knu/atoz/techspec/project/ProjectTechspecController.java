@@ -1,100 +1,89 @@
 package knu.atoz.techspec.project;
 
+import jakarta.servlet.http.HttpSession;
+import knu.atoz.member.Member;
 import knu.atoz.project.Project;
+import knu.atoz.project.ProjectService;
 import knu.atoz.techspec.Techspec;
 import knu.atoz.techspec.exception.TechspecException;
-import knu.atoz.utils.InputUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Scanner;
-import java.util.HashSet;
-import java.util.Set;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
+@Controller
+@RequestMapping("/projects/{projectId}/techspecs")
+@RequiredArgsConstructor
 public class ProjectTechspecController {
 
     private final ProjectTechspecService projectTechspecService;
-    private final Scanner scanner;
+    private final ProjectService projectService; // 프로젝트 정보 확인용
 
-    public ProjectTechspecController(
-            ProjectTechspecService projectTechspecService,
-            Scanner scanner
-    ) {
-        this.projectTechspecService = projectTechspecService;
-        this.scanner = scanner;
-    }
-
-    public void showProjectTechspecs(Project currentProject) {
-        System.out.println("\n---------- [" + currentProject.getTitle() + "] 요구 스택 목록 ----------");
-        for (Techspec t : projectTechspecService.getProjectTechspecs(currentProject)) {
-            System.out.println(t.getId() + ". " + t.getName());
-        }
-    }
-
-    public void showProjectTechspecMenu(Project currentProject) {
-        while (true) {
-            System.out.println("\n---------- [" + currentProject.getTitle() + "] 요구 테크스펙 관리 ----------");
-            System.out.println("1. 요구 테크스펙 목록 보기");
-            System.out.println("2. 테크스펙 추가");
-            System.out.println("3. 테크스펙 삭제");
-            System.out.println("b. 뒤로 가기 (상세 메뉴)");
-            System.out.print("메뉴를 선택하세요: ");
-            String choice = scanner.nextLine();
-
-            try {
-                switch (choice) {
-                    case "1":
-                        showProjectTechspecs(currentProject);
-                        break;
-                    case "2":
-                        addTechspecUI(currentProject);
-                        break;
-                    case "3":
-                        removeTechspecUI(currentProject);
-                        break;
-                    case "b":
-                        return;
-                    default:
-                        System.out.println("잘못된 입력입니다.");
-                }
-            } catch (InputUtil.CancelException e) {
-                System.out.println("\n[!] 작업이 취소되었습니다.");
-            }
-        }
-    }
-
-    private void addTechspecUI(Project currentProject) {
-        String techName = InputUtil.getInput(scanner, "추가할 기술 스택 이름 (예: Java, Git)");
+    // 1. 관리 페이지 보여주기 (목록 + 추가폼)
+    @GetMapping
+    public String showManagePage(@PathVariable Long projectId,
+                                 HttpSession session,
+                                 Model model) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) return "redirect:/members/login";
 
         try {
-            projectTechspecService.addTechspecToProject(currentProject, techName);
-            System.out.println("'" + techName + "' 스택이 프로젝트에 추가되었습니다.");
-        } catch (TechspecException e) {
-            System.out.println("[오류]: " + e.getMessage());
+            // 본인 프로젝트인지 등 권한 체크 및 프로젝트 정보 조회
+            Project project = projectService.getMyProjectById(loginMember, projectId);
+            model.addAttribute("project", project);
+
+            // 현재 등록된 기술 스택 목록 조회
+            List<Techspec> techspecs = projectTechspecService.getProjectTechspecs(projectId);
+            model.addAttribute("techspecs", techspecs);
+
+            return "project/techspec-manage"; // 뷰 이름
+
+        } catch (Exception e) {
+            return "redirect:/projects/my?error=" + encode(e.getMessage());
         }
     }
 
-    private void removeTechspecUI(Project currentProject) {
-        showProjectTechspecs(currentProject);
-
-        Long techId = InputUtil.getLong(scanner, "삭제할 기술 스택의 번호(ID)");
+    // 2. 기술 스택 추가 (POST)
+    @PostMapping("/add")
+    public String addTechspec(@PathVariable Long projectId,
+                              @RequestParam String techName,
+                              HttpSession session) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) return "redirect:/members/login";
 
         try {
-            projectTechspecService.removeTechspecFromProject(currentProject, techId);
-            System.out.println("스택이 성공적으로 삭제되었습니다.");
+            // 서비스 호출
+            projectTechspecService.addTechspecToProject(projectId, techName.trim());
+            return "redirect:/projects/" + projectId + "/techspecs";
+
         } catch (TechspecException e) {
-            System.out.println("[오류]: " + e.getMessage());
+            return "redirect:/projects/" + projectId + "/techspecs?error=" + encode(e.getMessage());
         }
     }
 
-    public Set<String> inputTechSpecs() {
-        Set<String> uniqueTechNames = new HashSet<>();
-        System.out.println("\n---------- 요구 스택 입력 ----------");
-        while (true) {
-            System.out.print("추가할 기술 스택 이름 (완료: q): ");
-            String techName = scanner.nextLine();
+    // 3. 기술 스택 삭제 (POST)
+    @PostMapping("/{techspecId}/delete")
+    public String removeTechspec(@PathVariable Long projectId,
+                                 @PathVariable Long techspecId,
+                                 HttpSession session) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) return "redirect:/members/login";
 
-            if ("q".equalsIgnoreCase(techName)) break;
-            uniqueTechNames.add(techName.toUpperCase());
+        try {
+            projectTechspecService.removeTechspecFromProject(projectId, techspecId);
+            return "redirect:/projects/" + projectId + "/techspecs";
+
+        } catch (Exception e) {
+            return "redirect:/projects/" + projectId + "/techspecs?error=" + encode(e.getMessage());
         }
-        return uniqueTechNames;
+    }
+
+    // 한글 인코딩 헬퍼 메서드
+    private String encode(String text) {
+        return URLEncoder.encode(text, StandardCharsets.UTF_8);
     }
 }

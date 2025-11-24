@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>기술 스택 관리</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .tech-card {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .tech-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+        }
+        .add-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px dashed #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" style="max-width: 600px;">
+
+    <h1>💻 기술 스택 관리</h1>
+    <p class="subtitle" th:text="${project.title} + ' 의 기술 스택을 관리합니다.'">프로젝트명</p>
+
+    <div class="text-right">
+        <a th:href="@{/projects/{id}(id=${project.id})}" class="btn btn-secondary">상세로 돌아가기</a>
+    </div>
+    <hr>
+
+    <div th:if="${param.error}" class="error-msg" th:text="${param.error}">에러</div>
+
+    <div class="add-box">
+        <h3 style="margin-top: 0; border: none; padding: 0;">➕ 스택 추가</h3>
+        <form th:action="@{/projects/{pid}/techspecs/add(pid=${project.id})}" method="post"
+              style="display: flex; gap: 10px;">
+
+            <input type="text" name="techName" placeholder="예: Java, React, Git" required style="margin: 0; flex-grow: 1;">
+            <button type="submit" class="btn btn-primary" style="margin: 0;">추가</button>
+        </form>
+    </div>
+
+    <h3>📋 현재 등록된 스택</h3>
+
+    <div th:if="${techspecs == null || techspecs.isEmpty()}" class="empty-message">
+        등록된 기술 스택이 없습니다.
+    </div>
+
+    <div th:each="tech : ${techspecs}" class="tech-card">
+        <span class="tech-name">
+            <span class="badge" th:text="${tech.name}">Java</span>
+        </span>
+
+        <form th:action="@{/projects/{pid}/techspecs/{tid}/delete(pid=${project.id}, tid=${tech.id})}" method="post">
+            <button type="submit" class="btn btn-danger"
+                    style="padding: 5px 10px; font-size: 12px;"
+                    onclick="return confirm('정말 삭제하시겠습니까?');">삭제</button>
+        </form>
+    </div>
+
+</div>
+
+</body>
+</html>

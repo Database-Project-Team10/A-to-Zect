@@ -1,21 +1,22 @@
 package knu.atoz.project;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Project {
-    private final Long id;
-    private final String title;
-    private final String description;
-    private final LocalDateTime createdAt;
-    private final LocalDateTime modifiedAt;
-
-    public Project(Long id, String title, String description, LocalDateTime createdAt,  LocalDateTime modifiedAt) {
-        this.id = id;
-        this.title = title;
-        this.description = description;
-        this.createdAt = createdAt;
-        this.modifiedAt = modifiedAt;
-    }
+    private Long id;
+    private String title;
+    private String description;
+    private LocalDateTime createdAt;
+    private LocalDateTime modifiedAt;
 
     public Project(Long id, String title, String description, LocalDateTime createdAt) {
         this.id = id;
@@ -32,25 +33,4 @@ public class Project {
         this.createdAt = LocalDateTime.now();
         this.modifiedAt = LocalDateTime.now();
     }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getModifiedAt() {
-        return modifiedAt;
-    }
-
 }

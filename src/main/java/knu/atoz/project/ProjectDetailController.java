@@ -95,7 +95,7 @@ public class ProjectDetailController {
                         currentProject = updateProjectInfoUI(currentProject);
                         break;
                     case "6":
-                        projectTechspecController.showProjectTechspecMenu(currentProject);
+                        // projectTechspecController.showProjectTechspecMenu(currentProject);
                         //return;
                         break;
                     case "7":

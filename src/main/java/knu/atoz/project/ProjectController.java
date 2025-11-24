@@ -95,7 +95,7 @@ public class ProjectController {
             return "redirect:/members/login";
         }
 
-        List<Project> myProjects = projectService.getMyProjectList(loginMember);
+        List<Project> myProjects = projectService.getMyProjectList(loginMember.getId());
         model.addAttribute("projects", myProjects);
 
         return "project/my-list";
@@ -135,7 +135,7 @@ public class ProjectController {
 
             // 2. [추가] 기술 스택 조회 (서비스에 메서드가 있다고 가정)
             // 만약 Set<String>이나 List<String>을 반환한다면 그대로 모델에 넣습니다.
-            List<Techspec> techSpecs = projectTechspecService.getProjectTechspecs(project);
+            List<Techspec> techSpecs = projectTechspecService.getProjectTechspecs(projectId);
             model.addAttribute("techSpecs", techSpecs);
 
             // 3. [추가] MBTI 정보 조회

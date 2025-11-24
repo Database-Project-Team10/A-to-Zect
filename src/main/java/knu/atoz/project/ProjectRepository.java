@@ -104,7 +104,7 @@ public class ProjectRepository {
     public List<Project> findProjectsByMemberId(long memberId) {
         List<Project> projectList = new ArrayList<>();
 
-        String sql = "SELECT p.id, p.title, p.description, p.created_at, p.updated_at " +
+        String sql = "SELECT p.* " +
                 "FROM project p " +
                 "JOIN participant pa ON p.id = pa.project_id " +
                 "WHERE pa.member_id = ? " +

@@ -20,7 +20,7 @@
 
     <form th:action="@{|/projects/${projectId}/edit|}" method="post" th:object="${updateDto}">
 
-        <h3>1. 기본 정보 수정</h3>
+        <h3>기본 정보 수정</h3>
 
         <div>
             <label>프로젝트 제목</label>
@@ -30,6 +30,14 @@
         <div>
             <label>설명</label>
             <textarea th:field="*{description}" placeholder="프로젝트 설명을 입력하세요" required style="min-height: 150px;"></textarea>
+        </div>
+
+        <div>
+            <label>최대 모집 인원</label>
+            <input type="number" th:field="*{maxCount}" min="2" max="20" required placeholder="예: 4">
+            <p style="font-size: 12px; color: #888; margin-top: -10px;">
+                * 현재 참여 인원보다 적게 설정할 수 없습니다.
+            </p>
         </div>
 
         <div class="info-card" style="margin-top: 20px; background: #f8f9fa; border: none;">

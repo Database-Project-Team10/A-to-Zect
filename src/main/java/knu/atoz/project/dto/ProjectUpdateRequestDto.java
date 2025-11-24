@@ -12,4 +12,5 @@ import lombok.Setter;
 public class ProjectUpdateRequestDto {
     private String title;
     private String description;
+    private Integer maxCount;
 }

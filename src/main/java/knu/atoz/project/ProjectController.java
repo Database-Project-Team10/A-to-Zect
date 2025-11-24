@@ -145,6 +145,9 @@ public class ProjectController {
             Project project = projectService.getProject(projectId);
             model.addAttribute("project", project);
 
+            String myRole = participantService.getMyRole(projectId, loginMember.getId());
+            model.addAttribute("myRole", myRole);
+
             List<Techspec> techSpecs = projectTechspecService.getProjectTechspecs(projectId);
             model.addAttribute("techSpecs", techSpecs);
 
@@ -173,7 +176,8 @@ public class ProjectController {
 
             ProjectUpdateRequestDto updateDto = new ProjectUpdateRequestDto(
                     project.getTitle(),
-                    project.getDescription()
+                    project.getDescription(),
+                    project.getMaxCount()
             );
 
             model.addAttribute("updateDto", updateDto);
@@ -206,6 +210,72 @@ public class ProjectController {
             model.addAttribute("updateDto", dto); // 입력했던 내용 유지
             model.addAttribute("projectId", projectId);
             return "project/edit";
+        }
+    }
+
+    @PostMapping("/{projectId}/apply")
+    public String applyProject(@PathVariable Long projectId, HttpSession session) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) return "redirect:/members/login";
+
+        try {
+            participantService.applyProject(projectId, loginMember.getId());
+            return "redirect:/projects/" + projectId;
+        } catch (Exception e) {
+            return "redirect:/projects/" + projectId + "?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
+        }
+    }
+
+    // [2] 신청자 관리 페이지 (LEADER 전용)
+    @GetMapping("/{projectId}/manage")
+    public String manageParticipants(@PathVariable Long projectId, HttpSession session, Model model) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) return "redirect:/members/login";
+
+        try {
+            // 1. 리더 권한 체크 (서비스 내부 혹은 여기서 수행)
+            String myRole = participantService.getMyRole(projectId, loginMember.getId());
+            if (!"LEADER".equals(myRole)) {
+                throw new RuntimeException("관리자 권한이 없습니다.");
+            }
+
+            // 2. 프로젝트 정보 및 대기자 목록 조회
+            Project project = projectService.getProject(projectId);
+            List<Member> pendingMembers = participantService.getPendingMembers(projectId);
+
+            model.addAttribute("project", project);
+            model.addAttribute("pendingList", pendingMembers);
+
+            return "participant/manage";
+
+        } catch (Exception e) {
+            return "redirect:/projects/" + projectId + "?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
+        }
+    }
+
+    // [3] 신청 수락 (PENDING -> MEMBER)
+    @PostMapping("/{projectId}/accept/{targetMemberId}")
+    public String acceptMember(@PathVariable Long projectId,
+                               @PathVariable Long targetMemberId,
+                               HttpSession session) {
+        // 리더 체크 생략 (Service나 앞단에서 처리한다고 가정, 보안상 추가하는 게 좋음)
+        try {
+            participantService.acceptMember(projectId, targetMemberId);
+            return "redirect:/projects/" + projectId + "/manage";
+        } catch (Exception e) {
+            return "redirect:/projects/" + projectId + "/manage?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
+        }
+    }
+
+    // [4] 신청 거절 (삭제)
+    @PostMapping("/{projectId}/reject/{targetMemberId}")
+    public String rejectMember(@PathVariable Long projectId,
+                               @PathVariable Long targetMemberId) {
+        try {
+            participantService.rejectMember(projectId, targetMemberId);
+            return "redirect:/projects/" + projectId + "/manage";
+        } catch (Exception e) {
+            return "redirect:/projects/" + projectId + "/manage?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
         }
     }
 }

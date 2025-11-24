@@ -6,107 +6,20 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
 
     <style>
-        /* MBTI 선택 영역 스타일 */
-        .mbti-section {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            margin-top: 10px;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-
-        .mbti-card {
-            flex: 1;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            text-align: center;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .mbti-title {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .radio-group {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-        }
-
+        /* 기존 CSS 유지 */
+        .mbti-section { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 8px; }
+        .mbti-card { flex: 1; background: white; border: 1px solid #ddd; border-radius: 8px; text-align: center; padding: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .mbti-title { font-size: 12px; color: #666; margin-bottom: 5px; font-weight: bold; }
+        .radio-group { display: flex; justify-content: center; gap: 5px; }
         input[type="radio"] { display: none; }
+        input[type="radio"] + label { display: inline-block; width: 40px; height: 40px; line-height: 40px; text-align: center; border: 1px solid #ddd; border-radius: 50%; cursor: pointer; font-weight: bold; color: #333; transition: 0.2s; margin: 0 !important; }
+        input[type="radio"]:checked + label { background-color: #007bff; color: white; border-color: #007bff; box-shadow: 0 2px 5px rgba(0,123,255,0.3); }
 
-        input[type="radio"] + label {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            line-height: 40px;
-            text-align: center;
-            border: 1px solid #ddd;
-            border-radius: 50%;
-            cursor: pointer;
-            font-weight: bold;
-            color: #333;
-            transition: 0.2s;
-            margin: 0 !important;
-        }
-
-        input[type="radio"]:checked + label {
-            background-color: #007bff;
-            color: white;
-            border-color: #007bff;
-            box-shadow: 0 2px 5px rgba(0,123,255,0.3);
-        }
-
-        /* [추가] 기술 스택 태그 스타일 */
-        .tag-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 10px;
-            padding: 10px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            min-height: 50px;
-        }
-
-        .tech-tag {
-            background-color: #eef2ff;
-            color: #4f46e5;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .remove-tag-btn {
-            cursor: pointer;
-            color: #4f46e5;
-            font-weight: bold;
-            border: none;
-            background: none;
-            padding: 0;
-            font-size: 16px;
-            line-height: 1;
-        }
+        .tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 6px; min-height: 50px; }
+        .tech-tag { background-color: #eef2ff; color: #4f46e5; padding: 5px 10px; border-radius: 20px; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 5px; }
+        .remove-tag-btn { cursor: pointer; color: #4f46e5; font-weight: bold; border: none; background: none; padding: 0; font-size: 16px; line-height: 1; }
         .remove-tag-btn:hover { color: #dc3545; }
-
-        .input-group {
-            display: flex;
-            gap: 10px;
-        }
+        .input-group { display: flex; gap: 10px; }
     </style>
 </head>
 <body>
@@ -130,6 +43,12 @@
         <div>
             <label>설명</label>
             <textarea th:field="*{description}" placeholder="프로젝트 설명을 입력하세요" required></textarea>
+        </div>
+
+        <div>
+            <label>최대 모집 인원 (본인 포함)</label>
+            <input type="number" th:field="*{maxCount}" min="2" max="20" value="4" required placeholder="예: 4명">
+            <p style="font-size: 12px; color: #888; margin-top: -10px;">* 최소 2명부터 최대 20명까지 설정 가능합니다.</p>
         </div>
 
         <hr>
@@ -200,10 +119,9 @@
     const hiddenInputsContainer = document.getElementById('hiddenInputsContainer');
     const placeholderText = document.getElementById('placeholder-text');
 
-    // 엔터키 입력 시 폼 제출 방지하고 태그 추가
     techInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
-            e.preventDefault(); // 폼 제출 방지
+            e.preventDefault();
             addTechTag();
         }
     });
@@ -212,8 +130,6 @@
         const text = techInput.value.trim();
         if (!text) return;
 
-        // 1. 중복 체크 (선택 사항)
-        // 이미 있는 input value인지 확인
         const existingInputs = document.querySelectorAll('input[name="techSpecs"]');
         for (let input of existingInputs) {
             if (input.value.toLowerCase() === text.toLowerCase()) {
@@ -223,42 +139,29 @@
             }
         }
 
-        // 2. 플레이스홀더 숨기기
         if (placeholderText) placeholderText.style.display = 'none';
 
-        // 3. 시각적 태그 생성 (UI)
         const tag = document.createElement('div');
         tag.className = 'tech-tag';
-        tag.innerHTML = `
-            ${text}
-            <span class="remove-tag-btn" onclick="removeTag(this, '${text}')">&times;</span>
-        `;
+        tag.innerHTML = `${text} <span class="remove-tag-btn" onclick="removeTag(this, '${text}')">&times;</span>`;
         tagDisplayArea.appendChild(tag);
 
-        // 4. 실제 전송용 Hidden Input 생성
-        // <input type="hidden" name="techSpecs" value="Java">
         const hiddenInput = document.createElement('input');
         hiddenInput.type = 'hidden';
-        hiddenInput.name = 'techSpecs'; // DTO의 Set<String> techSpecs와 매핑됨
+        hiddenInput.name = 'techSpecs';
         hiddenInput.value = text;
-        hiddenInput.id = 'hidden-' + text; // 삭제를 위해 ID 부여
+        hiddenInput.id = 'hidden-' + text;
         hiddenInputsContainer.appendChild(hiddenInput);
 
-        // 5. 입력창 초기화
         techInput.value = '';
         techInput.focus();
     }
 
     function removeTag(btn, text) {
-        // UI에서 삭제
         const tag = btn.parentElement;
         tag.remove();
-
-        // Hidden Input 삭제
         const hiddenInput = document.getElementById('hidden-' + text);
         if (hiddenInput) hiddenInput.remove();
-
-        // 태그가 하나도 없으면 플레이스홀더 다시 표시
         if (hiddenInputsContainer.children.length === 0) {
             if (placeholderText) placeholderText.style.display = 'inline';
         }

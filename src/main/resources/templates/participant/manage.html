@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>신청자 관리</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .applicant-card {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .applicant-info { display: flex; flex-direction: column; }
+        .applicant-name { font-weight: bold; font-size: 16px; color: #333; }
+        .applicant-email { font-size: 14px; color: #888; }
+        .action-buttons { display: flex; gap: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container" style="max-width: 700px;">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>👥 신청자 관리</h1>
+        <a th:href="@{/projects/{id}(id=${project.id})}" class="btn btn-outline">← 상세로</a>
+    </div>
+
+    <p class="subtitle">
+        <span style="font-weight: bold;" th:text="${project.title}">프로젝트명</span>의 참가 신청 내역입니다.
+        <br>
+        (현재 인원: <span th:text="${project.currentCount}">1</span> / <span th:text="${project.maxCount}">4</span> 명)
+    </p>
+
+    <hr>
+
+    <div th:if="${param.error}" class="error-msg" th:text="${param.error}"></div>
+
+    <div th:if="${pendingList == null || pendingList.isEmpty()}" class="empty-message" style="padding: 50px;">
+        현재 대기 중인 신청자가 없습니다.
+    </div>
+
+    <div th:each="member : ${pendingList}" class="applicant-card">
+
+        <div class="applicant-info">
+            <span class="applicant-name" th:text="${member.name}">홍길동</span>
+            <span class="applicant-email" th:text="${member.email}">test@example.com</span>
+        </div>
+
+        <div class="action-buttons">
+            <form th:action="@{|/projects/${project.id}/accept/${member.id}|}" method="post">
+                <button type="submit" class="btn btn-primary" style="padding: 8px 15px; font-size: 13px;"
+                        onclick="return confirm('이 회원을 팀원으로 수락하시겠습니까?');">
+                    수락
+                </button>
+            </form>
+
+            <form th:action="@{|/projects/${project.id}/reject/${member.id}|}" method="post">
+                <button type="submit" class="btn btn-danger" style="padding: 8px 15px; font-size: 13px;"
+                        onclick="return confirm('정말 거절하시겠습니까?');">
+                    거절
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -16,6 +16,7 @@ public class ProjectCreateRequestDto {
     private Long memberId;
     private String title;
     private String description;
+    private Integer maxCount;
     private Set<String> techSpecs;
     private Map<Long, String> mbtiMap;
 }

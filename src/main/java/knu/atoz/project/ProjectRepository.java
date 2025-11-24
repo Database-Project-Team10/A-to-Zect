@@ -28,6 +28,8 @@ public class ProjectRepository {
                             rs.getLong("id"),
                             rs.getString("title"),
                             rs.getString("description"),
+                            rs.getInt("current_count"),
+                            rs.getInt("max_count"),
                             rs.getObject("created_at", LocalDateTime.class),
                             rs.getObject("updated_at", LocalDateTime.class)
                     );
@@ -56,6 +58,8 @@ public class ProjectRepository {
                             rs.getLong("id"),
                             rs.getString("title"),
                             rs.getString("description"),
+                            rs.getInt("current_count"),
+                            rs.getInt("max_count"),
                             rs.getObject("created_at", LocalDateTime.class),
                             rs.getObject("updated_at", LocalDateTime.class)
                     );
@@ -83,6 +87,8 @@ public class ProjectRepository {
                             rs.getLong("id"),
                             rs.getString("title"),
                             rs.getString("description"),
+                            rs.getInt("current_count"),
+                            rs.getInt("max_count"),
                             rs.getObject("created_at", LocalDateTime.class),
                             rs.getObject("updated_at", LocalDateTime.class)
                     );
@@ -115,6 +121,8 @@ public class ProjectRepository {
                             rs.getLong("id"),
                             rs.getString("title"),
                             rs.getString("description"),
+                            rs.getInt("current_count"),
+                            rs.getInt("max_count"),
                             rs.getObject("created_at", LocalDateTime.class),
                             rs.getObject("updated_at", LocalDateTime.class)
                     );
@@ -186,6 +194,8 @@ public class ProjectRepository {
                             generatedId,
                             project.getTitle(),
                             project.getDescription(),
+                            project.getCurrentCount(),
+                            project.getMaxCount(),
                             project.getCreatedAt(),
                             project.getModifiedAt()
                     );
@@ -198,15 +208,16 @@ public class ProjectRepository {
     }
 
     public boolean updateProject(Project project) {
-        String sql = "UPDATE project SET title = ?, description = ?, updated_at = ? WHERE id = ?";
+        String sql = "UPDATE project SET title = ?, description = ?, max_count = ?, updated_at = ? WHERE id = ?";
 
         try (Connection conn = Azconnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, project.getTitle());
             pstmt.setString(2, project.getDescription());
-            pstmt.setTimestamp(3, java.sql.Timestamp.valueOf(project.getModifiedAt()));
-            pstmt.setLong(4, project.getId());
+            pstmt.setInt(3, project.getMaxCount());
+            pstmt.setTimestamp(4, java.sql.Timestamp.valueOf(project.getModifiedAt()));
+            pstmt.setLong(5, project.getId());
 
             // 쿼리 실행 (영향받은 행의 수 반환)
             int affectedRows = pstmt.executeUpdate();
@@ -263,6 +274,8 @@ public class ProjectRepository {
                             rs.getLong("id"),
                             rs.getString("title"),
                             rs.getString("description"),
+                            rs.getInt("current_count"),
+                            rs.getInt("max_count"),
                             rs.getObject("created_at", LocalDateTime.class),
                             rs.getObject("updated_at", LocalDateTime.class)
                     );
@@ -286,6 +299,8 @@ public class ProjectRepository {
                             rs.getLong("id"),
                             rs.getString("title"),
                             rs.getString("description"),
+                            rs.getInt("current_count"),
+                            rs.getInt("max_count"),
                             rs.getObject("created_at", LocalDateTime.class),
                             rs.getObject("updated_at", LocalDateTime.class)
                     );
@@ -293,6 +308,15 @@ public class ProjectRepository {
                     throw new SQLException("Project 조회 실패: ID " + projectId + "를 찾을 수 없습니다.");
                 }
             }
+        }
+    }
+
+    // 인원수 증가 (트랜잭션용 Connection 받는 버전)
+    public void incrementCurrentCount(Connection conn, Long projectId) throws SQLException {
+        String sql = "UPDATE Project SET current_count = current_count + 1 WHERE id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, projectId);
+            pstmt.executeUpdate();
         }
     }
 

@@ -89,7 +89,7 @@ public class ProjectService {
             conn.setAutoCommit(false); // 트랜잭션 시작
 
             // 1. Project 생성
-            Project newProject = projectRepository.save(conn, new Project(requestDto.getTitle(), requestDto.getDescription()));
+            Project newProject = projectRepository.save(conn, new Project(requestDto.getTitle(), requestDto.getDescription(), requestDto.getMaxCount()));
 
             // 2. Participant 추가
             participantRepository.saveLeader(conn, requestDto.getMemberId(), newProject.getId());
@@ -141,6 +141,8 @@ public class ProjectService {
                 projectId,
                 requestDto.getTitle(),
                 requestDto.getDescription(),
+                project.getCurrentCount(),
+                requestDto.getMaxCount(),
                 project.getCreatedAt()
         );
         projectRepository.updateProject(newProject);

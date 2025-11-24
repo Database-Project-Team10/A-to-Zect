@@ -2,12 +2,13 @@ package knu.atoz.member;
 
 import knu.atoz.member.dto.MemberInfoResponseDto;
 import knu.atoz.utils.Azconnection;
+import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-
+@Repository
 public class MemberRepository {
 
     public Member findByEmail(String email) {

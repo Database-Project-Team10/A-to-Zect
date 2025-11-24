@@ -2,7 +2,6 @@ package knu.atoz.member.dto;
 
 import knu.atoz.member.Member;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;

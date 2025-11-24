@@ -1,47 +1,37 @@
 package knu.atoz.member;
 
-import knu.atoz.member.dto.CreateMemberRequestDto;
+import knu.atoz.member.dto.SignupRequestDto;
 import knu.atoz.member.dto.MemberInfoResponseDto;
 import knu.atoz.member.dto.PasswordUpdateRequestDto;
 import knu.atoz.member.exception.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Service
+@RequiredArgsConstructor
 public class MemberService {
 
     private final MemberRepository memberRepository;
-    private Member loggedInUser;
 
-    public MemberService(MemberRepository memberRepository) {
-        this.memberRepository = memberRepository;
-    }
+    public Member signUp(SignupRequestDto signupRequestDto) {
+        // isLoggedIn() 체크 로직 삭제 (웹에서는 불필요)
 
-    /**
-     * 회원가입
-     */
-    public Member signUp(CreateMemberRequestDto createMemberRequestDto) {
-
-        if (isLoggedIn()) {
-            throw new UnauthorizedException();
-        }
-
-        if (memberRepository.findByEmail(createMemberRequestDto.getEmail()) != null) {
+        if (memberRepository.findByEmail(signupRequestDto.getEmail()) != null) {
             throw new DuplicateEmailException();
         }
 
-        if (!createMemberRequestDto.getPassword().equals(createMemberRequestDto.getConfirmPassword())) {
+        if (!signupRequestDto.getPassword().equals(signupRequestDto.getConfirmPassword())) {
             throw new PasswordMismatchException();
         }
 
-        return memberRepository.save(createMemberRequestDto.toEntity());
+        return memberRepository.save(signupRequestDto.toEntity());
     }
 
-    /**
-     * 로그인
-     */
-    public void login(String email, String password) {
-
-        if (isLoggedIn()) {
-            throw new UnauthorizedException();
-        }
+    public Member login(String email, String password) {
+        // isLoggedIn() 체크 로직 삭제
 
         Member member = memberRepository.findByEmail(email);
 
@@ -49,74 +39,33 @@ public class MemberService {
             throw new InvalidCredentialsException();
         }
 
-        loggedInUser = member;
+        // loggedInUser = member; <-- 이 줄 삭제!
+        return member;
     }
 
-    /**
-     * 비밀번호 변경
-     */
-    public void editPassword(PasswordUpdateRequestDto passwordUpdateRequestDto) {
+    public void editPassword(Long memberId, PasswordUpdateRequestDto dto) {
 
-        if (!isLoggedIn()) {
-            throw new UnauthorizedException();
-        }
-
-        Long currentMemberId = loggedInUser.getId();
-        if (memberRepository.findById(currentMemberId) == null){
+        Member member = memberRepository.findById(memberId);
+        if (member == null){
             throw new MemberNotFoundException();
         }
 
-        if (!passwordUpdateRequestDto.getNewPassword().equals(passwordUpdateRequestDto.getConfirmNewPassword())) {
+        if (!dto.getNewPassword().equals(dto.getConfirmNewPassword())) {
             throw new PasswordMismatchException();
         }
 
-        memberRepository.updatePassword(currentMemberId, passwordUpdateRequestDto.getNewPassword());
+        memberRepository.updatePassword(memberId, dto.getNewPassword());
     }
 
-    /**
-     * 회원 탈퇴
-     */
-    public void deleteMember(String choice) {
-
-        if (!isLoggedIn()) {
-            throw new UnauthorizedException();
-        }
-
-        if (choice.equalsIgnoreCase("Y")) {
-            Long deleteUserId = loggedInUser.getId();
-            logout();
-            memberRepository.delete(deleteUserId);
-        }
+    public MemberInfoResponseDto getAllInfo(Long memberId) {
+        return memberRepository.getAllInfoById(memberId);
     }
 
-    /**
-     * 로그아웃
-     */
-    public void logout() {
-        if (!isLoggedIn()) {
-            throw new UnauthorizedException();
-        }
-        loggedInUser = null;
-    }
-
-    /**
-     * 로그인 여부
-     */
     public boolean isLoggedIn() {
-        return loggedInUser != null;
-    }
+        return true;
+    } // 컴파일 에러 방지 임시 코드
 
-    /**
-     * 현재 로그인된 사용자
-     */
-    public Member getCurrentUser() {
-        return loggedInUser;
-    }
-
-    public MemberInfoResponseDto getAllInfo() {
-        if (!isLoggedIn()) {
-            throw new UnauthorizedException();
-        }
-        return memberRepository.getAllInfoById(loggedInUser.getId());
-    }
+    public Member getCurrentUser(){
+        return new Member(1L, "1", "1", "1", LocalDate.now(), LocalDateTime.now());
+    } // 컴파일 에러 방지 임시 코드
 }

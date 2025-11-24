@@ -1,197 +1,66 @@
 package knu.atoz.member;
 
-import knu.atoz.matching.MatchingController;
-import knu.atoz.mbti.member.MemberMbtiController;
-import knu.atoz.member.dto.CreateMemberRequestDto;
-import knu.atoz.member.dto.MemberInfoResponseDto;
-import knu.atoz.member.dto.PasswordUpdateRequestDto;
-import knu.atoz.member.exception.MemberException;
-import knu.atoz.techspec.member.MemberTechspecController;
-import knu.atoz.utils.InputUtil;
+import jakarta.servlet.http.HttpSession;
+import knu.atoz.member.dto.SignupRequestDto;
+import knu.atoz.member.dto.LoginRequestDto;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Scanner;
-
+@Controller
+@RequestMapping("/members")
+@RequiredArgsConstructor
 public class MemberController {
 
     private final MemberService memberService;
-    private final MemberTechspecController memberTechspecController;
-    private final MemberMbtiController memberMbtiController;
-    private final MatchingController matchingController;
 
-    private final Scanner scanner = new Scanner(System.in);
-
-    // ★ DI 적용: 필요한 모든 객체를 외부에서 주입받음
-    public MemberController(MemberService memberService,
-                            MemberTechspecController memberTechspecController,
-                            MemberMbtiController memberMbtiController,
-                            MatchingController matchingController) {
-
-        this.memberService = memberService;
-        this.memberTechspecController = memberTechspecController;
-        this.memberMbtiController = memberMbtiController;
-        this.matchingController = matchingController;
+    // 1. 회원가입 '페이지' 보여주기 (GET)
+    @GetMapping("/signup")
+    public String showSignupForm(Model model) {
+        // 빈 객체를 보내서 폼과 바인딩 (Thymeleaf 관례)
+        model.addAttribute("signupDto", new SignupRequestDto());
+        return "member/signup"; // resources/templates/member/signup.html을 찾아감
     }
 
-    public void showMemberMenu() {
+    // 2. 회원가입 '처리' 하기 (POST)
+    @PostMapping("/signup")
+    public String processSignup(@ModelAttribute SignupRequestDto dto) {
+        memberService.signUp(dto);
+        return "redirect:/members/login"; // 가입 성공 후 로그인 페이지로 이동 (URL 리다이렉트)
+    }
 
-        while (true) {
-            System.out.println("\n---------- 회원 기능 ----------");
+    // 3. 로그인 '페이지' 보여주기
+    @GetMapping("/login")
+    public String showLoginForm(Model model) { // [2] 파라미터에 Model 추가
+        // [3] 빈 껍데기 객체를 만들어서 "loginDto"라는 이름표를 붙여서 보냄
+        model.addAttribute("loginDto", new LoginRequestDto());
 
-            if (memberService.isLoggedIn()) {
-                System.out.println("현재 로그인: " + memberService.getCurrentUser().getEmail());
-                System.out.println("1. 로그아웃");
-                System.out.println("2. 비밀번호 수정");
-                System.out.println("3. 내 MBTI 입력/수정");
-                System.out.println("4. 내 테크스펙 관리");
-                System.out.println("5. 프로젝트 매칭 (추천)");
-                System.out.println("6. 내 정보 보기");
-                System.out.println("7. 회원 탈퇴");
-                System.out.println("b. 뒤로 가기");
-            } else {
-                System.out.println("1. 회원 가입");
-                System.out.println("2. 로그인");
-                System.out.println("b. 뒤로 가기");
-            }
+        return "member/login";
+    }
 
-            System.out.print("메뉴를 선택하세요: ");
-            String choice = scanner.nextLine();
-            if (choice.equals("b")) {
-                return;
-            }
+    // 4. 로그인 '처리' 하기
+    @PostMapping("/login")
+    public String processLogin(@ModelAttribute LoginRequestDto dto, HttpSession session, Model model) {
+        try {
+            Member member = memberService.login(dto.getEmail(), dto.getPassword());
 
-            if (memberService.isLoggedIn()) {
-                handleLoggedInMenu(choice);
-            } else {
-                handleLoggedOutMenu(choice);
-            }
+            session.setAttribute("loginMember", member);
+            return "redirect:/";
+
+        } catch (Exception e) {
+            model.addAttribute("loginDto", dto);
+
+            // 에러 메시지 전달
+            model.addAttribute("error", "아이디 또는 비밀번호가 올바르지 않습니다.");
+            return "member/login";
         }
     }
 
-    /**
-     * 로그인 상태 메뉴
-     */
-    private void handleLoggedInMenu(String choice) {
-        Member currentUser = memberService.getCurrentUser();
-        switch (choice) {
-            case "1":
-                try {
-                    memberService.logout();
-                    System.out.println("로그아웃 성공!");
-                } catch (MemberException e) {
-                    System.out.println("[오류] " + e.getMessage());
-                }
-                break;
-
-            case "2":
-                try {
-                    System.out.println("----- 비밀번호 수정 -----");
-                    System.out.println("현재 이메일: " + memberService.getCurrentUser().getEmail());
-
-                    String newPassword = InputUtil.getInput(scanner, "새 비밀번호");
-                    String confirmPassword = InputUtil.getInput(scanner, "새 비밀번호 확인");
-
-                    PasswordUpdateRequestDto requestDto = new PasswordUpdateRequestDto(newPassword, confirmPassword);
-                    memberService.editPassword(requestDto);
-                    System.out.println("비밀번호 변경 성공!");
-
-                } catch (InputUtil.CancelException e) {
-                    System.out.println("\n[!] 비밀번호 변경이 취소되었습니다.");
-                } catch (MemberException e) {
-                    System.out.println("[오류] " + e.getMessage());
-                }
-                break;
-
-            case "3":
-                memberMbtiController.showMemberMbtiMenu(currentUser);
-                break;
-
-            case "4":
-                memberTechspecController.showMemberTechspecMenu(currentUser);
-                break;
-
-            case "5":
-                matchingController.showMatchingMenu(currentUser);
-                break;
-
-            case "6":
-                MemberInfoResponseDto memberInfoResponseDto = memberService.getAllInfo();
-                System.out.println(memberInfoResponseDto.toString());
-                break;
-
-            case "7":
-                try {
-                    String input = InputUtil.getInput(scanner, "정말로 탈퇴하시겠습니까? (Y/N)");
-
-                    memberService.deleteMember(input);
-                    System.out.println("탈퇴가 완료되었습니다.");
-
-                } catch (InputUtil.CancelException e) {
-                    System.out.println("\n[!] 회원 탈퇴가 취소되었습니다.");
-                } catch (MemberException e) {
-                    System.out.println("[오류] " + e.getMessage());
-                }
-                break;
-
-            default:
-                System.out.println("잘못된 입력입니다.");
-        }
-    }
-
-    /**
-     * 로그아웃 상태 메뉴
-     */
-    private void handleLoggedOutMenu(String choice) {
-
-        switch (choice) {
-
-            case "1":
-                try {
-                    System.out.println("---------- 회원 가입 ----------");
-                    String newEmail = InputUtil.getInput(scanner, "사용할 이메일");
-                    String newPassword = InputUtil.getInput(scanner, "사용할 비밀번호");
-                    String confirmPassword = InputUtil.getInput(scanner, "비밀번호 확인");
-                    String newName = InputUtil.getInput(scanner, "이름");
-                    String birthStr = InputUtil.getInput(scanner, "생년월일(YYYY-MM-DD)");
-
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                    LocalDate birthDate = LocalDate.parse(birthStr, formatter);
-
-                    CreateMemberRequestDto createMemberRequestDto = new CreateMemberRequestDto(
-                            newEmail, newPassword, confirmPassword, newName, birthDate
-                    );
-
-                    Member member = memberService.signUp(createMemberRequestDto);
-                    System.out.println("'" + member.getEmail() + "'님, 회원가입이 완료되었습니다!");
-
-                } catch (InputUtil.CancelException e) {
-                    System.out.println("\n[!] 회원가입이 취소되었습니다.");
-                } catch (MemberException e) {
-                    System.out.println("[오류] " + e.getMessage());
-                } catch (Exception e) {
-                    System.out.println("[오류] 잘못된 입력 형식입니다.");
-                }
-                break;
-
-            case "2":
-                try {
-                    System.out.println("---------- 로그인 ----------");
-                    String email = InputUtil.getInput(scanner, "이메일");
-                    String password = InputUtil.getInput(scanner, "비밀번호");
-
-                    memberService.login(email, password);
-                    System.out.println("로그인 성공! '" + email + "'님, 환영합니다.");
-
-                } catch (InputUtil.CancelException e) {
-                    System.out.println("\n[!] 로그인이 취소되었습니다.");
-                } catch (MemberException e) {
-                    System.out.println("[오류] " + e.getMessage());
-                }
-                break;
-
-            default:
-                System.out.println("잘못된 입력입니다.");
-        }
+    // 5. 로그아웃
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        session.invalidate(); // 세션 날리기
+        return "redirect:/";
     }
 }

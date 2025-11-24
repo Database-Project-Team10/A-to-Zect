@@ -1,0 +1,262 @@
+@charset "UTF-8";
+
+/* =========================================
+   1. 초기화 및 기본 설정 (Reset & Base)
+   ========================================= */
+* {
+    box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
+}
+
+body {
+    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f4f6f8; /* 눈이 편안한 회색 배경 */
+    color: #333;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: #007bff;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* =========================================
+   2. 레이아웃 (Layout)
+   ========================================= */
+/* 모든 페이지의 내용을 감싸는 중앙 박스 */
+.container {
+    width: 90%;              /* 모바일에서는 90% 너비 */
+    max-width: 900px;        /* PC에서는 최대 900px까지만 커짐 */
+    margin: 60px auto;       /* 화면 중앙 정렬 */
+    padding: 40px;
+    background: #ffffff;
+    border-radius: 12px;     /* 둥근 모서리 */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05); /* 부드러운 그림자 */
+}
+
+/* 모바일 대응 */
+@media (max-width: 600px) {
+    .container {
+        padding: 20px;
+        margin: 20px auto;
+    }
+}
+
+/* =========================================
+   3. 타이포그래피 (Typography)
+   ========================================= */
+h1 {
+    font-size: 2rem;
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+h2, h3 {
+    color: #34495e;
+    margin-top: 40px;
+    margin-bottom: 15px;
+    padding-left: 12px;
+    border-left: 5px solid #007bff; /* 왼쪽에 파란 줄 포인트 */
+    font-weight: 600;
+}
+
+p.subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 40px;
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid #eee;
+    margin: 30px 0;
+}
+
+/* =========================================
+   4. 입력 폼 (Forms) - 로그인, 글쓰기 등
+   ========================================= */
+/* 입력창 공통 스타일 */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="date"],
+input[type="number"],
+textarea,
+select {
+    width: 100%;
+    padding: 12px 15px;
+    margin: 8px 0 20px; /* 위 8px, 아래 20px 간격 */
+    display: inline-block;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+    background-color: #fff;
+    transition: border-color 0.3s;
+}
+
+/* 입력창 클릭했을 때 파란색 테두리 */
+input:focus, textarea:focus, select:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
+}
+
+textarea {
+    resize: vertical; /* 세로로만 크기 조절 가능 */
+    min-height: 120px;
+}
+
+label {
+    font-weight: 600;
+    color: #555;
+    display: block; /* 라벨을 한 줄 차지하게 */
+    margin-bottom: 5px;
+}
+
+/* 체크박스/라디오버튼용 라벨은 옆으로 나열 */
+input[type="checkbox"] + label,
+input[type="radio"] + label {
+    display: inline-block;
+    margin-right: 15px;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+/* =========================================
+   5. 버튼 (Buttons)
+   ========================================= */
+.btn {
+    display: inline-block;
+    padding: 10px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+    margin: 5px;
+}
+
+.btn:hover {
+    filter: brightness(90%); /* 마우스 올리면 약간 어둡게 */
+    transform: translateY(-1px); /* 살짝 떠오르는 효과 */
+}
+
+/* 버튼 색상 변형 */
+.btn-secondary { background-color: #6c757d; } /* 회색 */
+.btn-danger { background-color: #dc3545; }    /* 빨간색 (삭제/로그아웃) */
+.btn-success { background-color: #28a745; }   /* 초록색 (완료) */
+
+/* 테두리만 있는 버튼 (깔끔한 스타일) */
+.btn-outline {
+    background-color: transparent;
+    border: 2px solid #007bff;
+    color: #007bff;
+}
+.btn-outline:hover {
+    background-color: #007bff;
+    color: #fff;
+}
+
+/* 꽉 차는 버튼 (로그인 등) */
+.btn-block {
+    width: 100%;
+    display: block;
+}
+
+/* =========================================
+   6. 테이블 (Tables) - 리스트 화면용
+   ========================================= */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: white;
+    font-size: 15px;
+}
+
+th, td {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+
+th {
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: bold;
+    text-align: center; /* 헤더는 가운데 정렬 */
+    border-top: 2px solid #343a40; /* 상단 진한 줄 */
+}
+
+tr:hover {
+    background-color: #f1f3f5; /* 마우스 올리면 배경색 변경 */
+}
+
+/* 데이터가 없을 때 메시지 */
+.empty-message {
+    text-align: center;
+    padding: 30px;
+    color: #868e96;
+}
+
+/* =========================================
+   7. 유틸리티 및 기타 (Utilities)
+   ========================================= */
+/* 오른쪽 정렬 */
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+
+/* 에러 메시지 박스 */
+.error-msg {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border: 1px solid #f5c6cb;
+    text-align: center;
+}
+
+/* 기술 스택 뱃지 스타일 */
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 4px;
+    background-color: #eef2ff;
+    color: #4f46e5;
+    margin-right: 4px;
+    margin-bottom: 4px;
+}
+
+/* 상단 메뉴 그리드 */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-top: 30px;
+}

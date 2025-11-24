@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>A to Zect - Home</title>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; text-align: center; margin: 0; padding: 0; background-color: #f9f9f9; }
+        .container { max-width: 800px; margin: 100px auto; padding: 40px; background: white; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; margin-bottom: 10px; }
+        p.subtitle { color: #666; margin-bottom: 40px; }
+
+        /* 버튼 스타일 */
+        .btn { display: inline-block; padding: 12px 25px; margin: 10px; font-size: 16px; font-weight: bold; text-decoration: none; border-radius: 8px; transition: 0.3s; cursor: pointer; border: none; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-primary:hover { background-color: #0056b3; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-secondary:hover { background-color: #545b62; }
+        .btn-outline { border: 2px solid #007bff; color: #007bff; background: white; }
+        .btn-outline:hover { background-color: #f0f8ff; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-danger:hover { background-color: #c82333; }
+
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div th:if="${session.loginMember == null}">
+        <h1>A to Zect에 오신 것을 환영합니다!</h1>
+        <p class="subtitle">함께 성장할 팀원을 찾고 프로젝트를 시작해보세요.</p>
+
+        <div>
+            <a href="/members/login" class="btn btn-primary">로그인</a>
+            <a href="/members/signup" class="btn btn-secondary">회원가입</a>
+        </div>
+    </div>
+
+    <div th:if="${session.loginMember != null}">
+        <h1>반갑습니다, <span th:text="${session.loginMember.name}" style="color: #007bff;">사용자</span>님!</h1>
+        <p class="subtitle">오늘도 즐거운 코딩 되세요.</p>
+
+        <div class="menu-grid">
+            <button class="btn btn-outline" onclick="alert('준비 중인 기능입니다.')">🚀 프로젝트 매칭</button>
+            <button class="btn btn-outline" onclick="alert('준비 중인 기능입니다.')">📝 내 MBTI 관리</button>
+            <button class="btn btn-outline" onclick="alert('준비 중인 기능입니다.')">💻 기술 스택 관리</button>
+            <button class="btn btn-outline" onclick="location.href='/members/my-info'">👤 내 정보 보기</button>
+        </div>
+
+        <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
+            <a href="/members/logout" class="btn btn-danger">로그아웃</a>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

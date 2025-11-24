@@ -3,6 +3,7 @@ package knu.atoz.member;
 import jakarta.servlet.http.HttpSession;
 import knu.atoz.member.dto.LoginRequestDto;
 import knu.atoz.member.dto.MemberInfoResponseDto;
+import knu.atoz.member.dto.MemberUpdateRequestDto;
 import knu.atoz.member.dto.SignupRequestDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -81,5 +82,51 @@ public class MemberController {
         model.addAttribute("info", infoDto);
 
         return "member/mypage";
+    }
+
+    // 1. 수정 페이지 이동
+    @GetMapping("/edit")
+    public String showEditForm(HttpSession session, Model model) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/members/login";
+        }
+
+        // 현재 정보를 DTO에 담아서 화면으로 보냄 (기존 값을 input에 채워놓기 위함)
+        // 비밀번호는 비워둠
+        MemberUpdateRequestDto dto = new MemberUpdateRequestDto(
+                loginMember.getEmail(),
+                loginMember.getName(),
+                loginMember.getBirthDate()
+        );
+
+        model.addAttribute("updateDto", dto);
+        return "member/edit";
+    }
+
+    // 2. 수정 처리
+    @PostMapping("/edit")
+    public String updateMember(@ModelAttribute MemberUpdateRequestDto dto,
+                               HttpSession session,
+                               Model model) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/members/login";
+        }
+
+        try {
+            // 서비스 호출 및 업데이트된 회원 정보 받기
+            Member updatedMember = memberService.updateMember(loginMember.getId(), dto);
+
+            // ★ 세션 정보 갱신 (이걸 안 하면 로그아웃 했다 들어와야 바뀐게 보임)
+            session.setAttribute("loginMember", updatedMember);
+
+            return "redirect:/members/mypage"; // 마이페이지로 이동
+
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("updateDto", dto); // 입력했던 값 유지
+            return "member/edit";
+        }
     }
 }

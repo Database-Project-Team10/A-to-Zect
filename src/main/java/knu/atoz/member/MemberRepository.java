@@ -221,4 +221,28 @@ public class MemberRepository {
         return null;
 
     }
+
+    // knu.atoz.member.MemberRepository.java 내부에 추가
+
+    public void update(Member member) {
+        String sql = "UPDATE member SET email = ?, name = ?, birth_date = ? WHERE id = ?";
+
+        try (Connection conn = Azconnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, member.getEmail());
+            pstmt.setString(2, member.getName());
+            pstmt.setDate(3, java.sql.Date.valueOf(member.getBirthDate()));
+            pstmt.setLong(4, member.getId());
+
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("회원 정보 수정 실패: 해당 ID를 찾을 수 없습니다.");
+            }
+
+        } catch (SQLException e) {
+            System.err.println("DB 업데이트 중 오류 발생: " + e.getMessage());
+            throw new RuntimeException("DB 오류 발생");
+        }
+    }
 }

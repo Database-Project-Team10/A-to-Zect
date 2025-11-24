@@ -1,9 +1,13 @@
 package knu.atoz.member;
 
-import knu.atoz.member.dto.SignupRequestDto;
 import knu.atoz.member.dto.MemberInfoResponseDto;
+import knu.atoz.member.dto.MemberUpdateRequestDto;
 import knu.atoz.member.dto.PasswordUpdateRequestDto;
-import knu.atoz.member.exception.*;
+import knu.atoz.member.dto.SignupRequestDto;
+import knu.atoz.member.exception.DuplicateEmailException;
+import knu.atoz.member.exception.InvalidCredentialsException;
+import knu.atoz.member.exception.MemberNotFoundException;
+import knu.atoz.member.exception.PasswordMismatchException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +21,6 @@ public class MemberService {
     private final MemberRepository memberRepository;
 
     public Member signUp(SignupRequestDto signupRequestDto) {
-        // isLoggedIn() 체크 로직 삭제 (웹에서는 불필요)
 
         if (memberRepository.findByEmail(signupRequestDto.getEmail()) != null) {
             throw new DuplicateEmailException();
@@ -31,15 +34,13 @@ public class MemberService {
     }
 
     public Member login(String email, String password) {
-        // isLoggedIn() 체크 로직 삭제
 
         Member member = memberRepository.findByEmail(email);
 
         if (member == null || !member.getPassword().equals(password)) {
-            throw new InvalidCredentialsException();
+            throw new InvalidCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다.");
         }
 
-        // loggedInUser = member; <-- 이 줄 삭제!
         return member;
     }
 
@@ -68,4 +69,35 @@ public class MemberService {
     public Member getCurrentUser(){
         return new Member(1L, "1", "1", "1", LocalDate.now(), LocalDateTime.now());
     } // 컴파일 에러 방지 임시 코드
+
+    public Member updateMember(Long memberId, MemberUpdateRequestDto dto) {
+
+        Member member = memberRepository.findById(memberId);
+        if (member == null) {
+            throw new MemberNotFoundException();
+        }
+
+        if (!member.getEmail().equals(dto.getEmail())) {
+            if (memberRepository.findByEmail(dto.getEmail()) != null) {
+                throw new DuplicateEmailException();
+            }
+        }
+
+        if (!member.getPassword().equals(dto.getPassword())) {
+            throw new InvalidCredentialsException("비밀번호가 올바르지 않습니다.");
+        }
+
+        Member updatedMember = new Member(
+                member.getId(),
+                dto.getEmail(),
+                dto.getPassword(),
+                dto.getName(),
+                dto.getBirthDate(),
+                member.getCreatedAt()
+        );
+
+        memberRepository.update(updatedMember);
+
+        return updatedMember;
+    }
 }

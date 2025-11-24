@@ -164,15 +164,22 @@
     <div class="info-card">
         <h3 style="margin-top: 0; border-left: none; padding-left: 0;">🚀 참여 프로젝트 이력</h3>
 
-        <div th:if="${info.projectAndRole == null || info.projectAndRole.isEmpty()}" style="text-align: center; color: #999; padding: 20px;">
+        <div th:if="${info.projects == null || info.projects.isEmpty()}"
+             style="text-align: center; color: #999; padding: 20px;">
             참여한 프로젝트 내역이 없습니다.
         </div>
 
-        <div th:if="${info.projectAndRole != null}">
-            <div th:each="proj : ${#strings.arraySplit(info.projectAndRole, ';')}"
-                 class="project-item"
-                 th:text="${#strings.trim(proj)}">
-                AtoZect 프로젝트 (팀장)
+        <div th:if="${info.projects != null}">
+            <div th:each="p : ${info.projects}" class="project-item">
+
+                <a th:href="@{/projects/{id}(id=${p.id})}"
+                   style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+
+                    <span th:text="${p.title}" style="font-weight: bold;">프로젝트 제목</span>
+
+                    <span style="color: #ccc; font-size: 12px;">바로가기 ></span>
+                </a>
+
             </div>
         </div>
     </div>

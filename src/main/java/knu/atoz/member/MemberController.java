@@ -2,6 +2,8 @@ package knu.atoz.member;
 
 import jakarta.servlet.http.HttpSession;
 import knu.atoz.member.dto.*;
+import knu.atoz.project.Project;
+import knu.atoz.project.ProjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -10,12 +12,15 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.util.List;
+
 @Controller
 @RequestMapping("/members")
 @RequiredArgsConstructor
 public class MemberController {
 
     private final MemberService memberService;
+    private final ProjectService projectService;
 
     // 1. 회원가입 '페이지' 보여주기 (GET)
     @GetMapping("/signup")
@@ -75,6 +80,10 @@ public class MemberController {
         }
 
         MemberInfoResponseDto infoDto = memberService.getAllInfo(loginMember.getId());
+
+        List<Project> myProjects = projectService.getMyProjectList(loginMember.getId());
+
+        infoDto.setProjects(myProjects);
 
         model.addAttribute("info", infoDto);
 

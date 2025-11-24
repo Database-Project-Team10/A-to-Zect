@@ -1,10 +1,7 @@
 package knu.atoz.member;
 
 import jakarta.servlet.http.HttpSession;
-import knu.atoz.member.dto.LoginRequestDto;
-import knu.atoz.member.dto.MemberInfoResponseDto;
-import knu.atoz.member.dto.MemberUpdateRequestDto;
-import knu.atoz.member.dto.SignupRequestDto;
+import knu.atoz.member.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -127,6 +124,43 @@ public class MemberController {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("updateDto", dto); // 입력했던 값 유지
             return "member/edit";
+        }
+    }
+
+    // 1. 비밀번호 변경 페이지 보여주기 (GET)
+    @GetMapping("/password")
+    public String showPasswordChangeForm(HttpSession session, Model model) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/members/login";
+        }
+
+        model.addAttribute("passwordDto", new PasswordUpdateRequestDto());
+        return "member/edit-password"; // templates/member/password.html
+    }
+
+    // 2. 비밀번호 변경 처리 (POST)
+    @PostMapping("/password")
+    public String processPasswordChange(@ModelAttribute PasswordUpdateRequestDto dto,
+                                        HttpSession session,
+                                        Model model) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/members/login";
+        }
+
+        try {
+            // 서비스 호출 (세션에 있는 ID 사용)
+            memberService.editPassword(loginMember.getId(), dto);
+
+            // 변경 성공 시 마이페이지로 이동 (또는 로그아웃 시킬 수도 있음)
+            return "redirect:/members/mypage";
+
+        } catch (Exception e) {
+            // 비밀번호 불일치 등의 에러 발생 시 다시 폼으로 이동
+            model.addAttribute("error", "비밀번호 변경 실패: " + e.getMessage());
+            model.addAttribute("passwordDto", dto);
+            return "member/edit-password";
         }
     }
 }

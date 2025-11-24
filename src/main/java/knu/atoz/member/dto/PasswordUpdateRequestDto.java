@@ -1,19 +1,15 @@
 package knu.atoz.member.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class PasswordUpdateRequestDto {
-    String newPassword;
-    String confirmNewPassword;
-
-    public PasswordUpdateRequestDto(String newPassword, String confirmNewPassword) {
-        this.newPassword = newPassword;
-        this.confirmNewPassword = confirmNewPassword;
-    }
-
-    public String getNewPassword() {
-        return newPassword;
-    }
-
-    public String getConfirmNewPassword() {
-        return confirmNewPassword;
-    }
+    private String newPassword;
+    private String confirmNewPassword;
 }

@@ -1,0 +1,26 @@
+/* src/main/resources/static/css/form.css */
+body {
+    background-color: #f8f9fa; /* 배경색을 약간 밝게 설정 */
+    display: flex;
+    justify-content: center; /* 수평 중앙 정렬 */
+    align-items: center; /* 수직 중앙 정렬 (필요 시) */
+    min-height: 100vh;
+}
+.form-container {
+    width: 100%;
+    max-width: 600px; /* 폼의 최대 너비 제한 */
+    padding: 40px;
+    background-color: #ffffff; /* 폼 배경은 흰색 */
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 그림자 추가 */
+}
+.form-header {
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: 700;
+}
+.btn-group-custom {
+    display: flex;
+    justify-content: flex-end; /* 버튼을 오른쪽으로 정렬 */
+    gap: 10px; /* 버튼 사이 간격 */
+}

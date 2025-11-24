@@ -1,40 +1,21 @@
 package knu.atoz.project.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+
 import java.util.Map;
 import java.util.Set;
 
+@Getter
+@Setter
+@RequiredArgsConstructor
+@AllArgsConstructor
 public class ProjectCreateRequestDto {
-    private final Long memberId;
-    private final String title;
-    private final String description;
-    private final Set<String> techSpecs;
-    private final Map<Long, String> mbtiMap;
-
-    public ProjectCreateRequestDto(Long memberId, String title, String description, Set<String> techSpecs,  Map<Long, String> mbtiMap) {
-        this.memberId = memberId;
-        this.title = title;
-        this.description = description;
-        this.techSpecs = techSpecs;
-        this.mbtiMap = mbtiMap;
-    }
-
-    public Long getMemberId() {
-        return memberId;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public Set<String> getTechSpecs() {
-        return techSpecs;
-    }
-
-    public Map<Long, String> getMbtiMap() {
-        return mbtiMap;
-    }
+    private Long memberId;
+    private String title;
+    private String description;
+    private Set<String> techSpecs;
+    private Map<Long, String> mbtiMap;
 }

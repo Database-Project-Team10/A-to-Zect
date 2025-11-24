@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>내 프로젝트</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<h1>내 프로젝트 목록</h1>
+<a href="/">[전체 목록 보기]</a>
+<hr>
+
+<div th:if="${param.error}" style="color: red;">
+    <p th:text="${param.error}">에러 발생</p>
+</div>
+
+<table border="1" style="width: 100%; text-align: center;">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>제목</th>
+        <th>역할</th> <th>기능</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:if="${projects.isEmpty()}">
+        <td colspan="4">참여 중인 프로젝트가 없습니다.</td>
+    </tr>
+
+    <tr th:each="project : ${projects}">
+        <td th:text="${project.id}">1</td>
+        <td th:text="${project.title}">제목</td>
+        <td>
+            <span>참여자</span>
+        </td>
+        <td>
+            <button type="button" th:onclick="|location.href='@{/projects/{id}(id=${project.id})}'|">입장하기</button>
+
+            <form th:action="@{|/projects/${project.id}/delete|}" method="post" style="display:inline;">
+                <button type="submit" onclick="return confirm('정말 삭제하시겠습니까?')">삭제</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

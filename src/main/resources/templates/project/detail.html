@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>프로젝트 상세</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<h1>💻 <span th:text="${project.title}">프로젝트 제목</span></h1>
+
+<div>
+    <a href="/projects/my">[목록으로 돌아가기]</a>
+</div>
+<hr>
+
+<h3>1. 프로젝트 설명</h3>
+<div style="background: #f4f4f4; padding: 10px;">
+    <p th:text="${project.description}"></p>
+</div>
+
+<h3>2. 사용 기술 스택</h3>
+<ul>
+    <li th:each="spec : ${techSpecs}">
+        <span class="badge" th:text="${spec.name}">Java</span>
+    </li>
+
+    <li th:if="${techSpecs == null || techSpecs.isEmpty()}" style="color: #999;">
+        등록된 기술 스택 없음
+    </li>
+</ul>
+
+<h3>3. 모집 MBTI 현황</h3>
+
+<div style="display: flex; flex-wrap: wrap; gap: 15px;">
+
+    <div th:each="entry : ${mbtiMap}"
+         style="background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 10px 20px; display: flex; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+
+        <span style="color: #666; font-size: 13px; font-weight: bold; margin-right: 10px;">
+            <span th:text="'# 모집 ' + ${entry.key}"># 모집 1</span>
+        </span>
+
+        <span style="background-color: #eef2ff; color: #4f46e5; padding: 5px 12px; border-radius: 20px; font-weight: 800; font-size: 16px; letter-spacing: 1px;"
+              th:text="${entry.value}">
+            ENTP
+        </span>
+    </div>
+
+    <div th:if="${mbtiMap == null || mbtiMap.isEmpty()}"
+         style="padding: 15px; color: #888; font-style: italic; background: #f9f9f9; border-radius: 8px; width: 100%; text-align: center;">
+        🌈 MBTI 제한 없음 (누구나 환영합니다!)
+    </div>
+
+</div>
+
+<hr>
+
+<h3>4. 프로젝트 활동</h3>
+<ul>
+    <li><a href="#">📋 게시판 보기 (준비중)</a></li>
+    <li><a href="#">📅 일정 관리 (준비중)</a></li>
+    <li><a href="#">💬 팀 채팅 (준비중)</a></li>
+</ul>
+
+</body>
+</html>

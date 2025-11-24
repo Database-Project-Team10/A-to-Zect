@@ -2,53 +2,84 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>A to Zect - Home</title>
-    <style>
-        body { font-family: 'Noto Sans KR', sans-serif; text-align: center; margin: 0; padding: 0; background-color: #f9f9f9; }
-        .container { max-width: 800px; margin: 100px auto; padding: 40px; background: white; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h1 { color: #333; margin-bottom: 10px; }
-        p.subtitle { color: #666; margin-bottom: 40px; }
-
-        /* 버튼 스타일 */
-        .btn { display: inline-block; padding: 12px 25px; margin: 10px; font-size: 16px; font-weight: bold; text-decoration: none; border-radius: 8px; transition: 0.3s; cursor: pointer; border: none; }
-        .btn-primary { background-color: #007bff; color: white; }
-        .btn-primary:hover { background-color: #0056b3; }
-        .btn-secondary { background-color: #6c757d; color: white; }
-        .btn-secondary:hover { background-color: #545b62; }
-        .btn-outline { border: 2px solid #007bff; color: #007bff; background: white; }
-        .btn-outline:hover { background-color: #f0f8ff; }
-        .btn-danger { background-color: #dc3545; color: white; }
-        .btn-danger:hover { background-color: #c82333; }
-
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 30px; }
-    </style>
+    <title>AtoZect - Home</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
 
 <div class="container">
 
-    <div th:if="${session.loginMember == null}">
-        <h1>A to Zect에 오신 것을 환영합니다!</h1>
-        <p class="subtitle">함께 성장할 팀원을 찾고 프로젝트를 시작해보세요.</p>
+    <h1>AtoZect에 오신 것을 환영합니다!</h1>
+    <p class="subtitle">프로젝트의 시작과 끝, A to Zect</p>
 
-        <div>
+    <hr>
+
+    <div th:if="${session.loginMember == null}">
+        <div style="margin-bottom: 30px;">
+            <p>로그인하고 팀원을 찾아보세요.</p>
             <a href="/members/login" class="btn btn-primary">로그인</a>
             <a href="/members/signup" class="btn btn-secondary">회원가입</a>
         </div>
     </div>
 
     <div th:if="${session.loginMember != null}">
-        <h1>반갑습니다, <span th:text="${session.loginMember.name}" style="color: #007bff;">사용자</span>님!</h1>
+        <h2 style="text-align: center; border: none; margin-top: 0;">
+            반갑습니다, <span th:text="${session.loginMember.name}" style="color: #007bff;">사용자</span>님!
+        </h2>
 
         <div class="menu-grid">
-            <button class="btn btn-outline" onclick="alert('준비 중인 기능입니다.')">🚀 프로젝트 매칭</button>
-            <button class="btn btn-outline" onclick="alert('준비 중인 기능입니다.')">📝 내 MBTI 관리</button>
-            <button class="btn btn-outline" onclick="alert('준비 중인 기능입니다.')">💻 기술 스택 관리</button>
-            <button class="btn btn-outline" onclick="location.href='/members/mypage'">👤 내 정보 보기</button>
+            <button class="btn btn-outline btn-block" onclick="location.href='/projects/create'">➕ 프로젝트 생성</button>
+            <button class="btn btn-outline btn-block" onclick="location.href='/projects/my'">📂 내 프로젝트</button>
+            <button class="btn btn-outline btn-block" onclick="location.href='/members/mypage'">👤 내 정보</button>
         </div>
 
-        <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
-            <a href="/members/logout" class="btn btn-danger">로그아웃</a>
+        <div style="margin-top: 15px; text-align: right;">
+            <a href="/members/logout" style="color: #dc3545; font-size: 14px; font-weight: bold;">로그아웃</a>
+        </div>
+    </div>
+
+
+    <div class="project-section">
+        <h3>📋 실시간 프로젝트 목록</h3>
+
+        <table>
+            <thead>
+            <tr>
+                <th style="width: 10%">ID</th>
+                <th style="width: 60%">제목</th>
+                <th style="width: 30%">기능</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${projects == null || projects.isEmpty()}">
+                <td colspan="3" class="empty-message">
+                    등록된 프로젝트가 없습니다.
+                </td>
+            </tr>
+
+            <tr th:each="project : ${projects}">
+                <td style="text-align: center;" th:text="${project.id}">1</td>
+                <td>
+                    <a th:href="@{/projects/{id}(id=${project.id})}"
+                       style="font-weight: bold; color: #333;"
+                       th:text="${project.title}">제목</a>
+                    <br>
+                    <span style="font-size: 13px; color: #888;"
+                          th:text="${#strings.abbreviate(project.description, 30)}">설명...</span>
+                </td>
+                <td style="text-align: center;">
+                    <button class="btn btn-outline"
+                            style="padding: 6px 12px; font-size: 13px;"
+                            th:onclick="|location.href='@{/projects/{id}(id=${project.id})}'|">
+                        상세보기
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="text-right" style="margin-top: 15px;">
+            <a href="/projects" style="color: #666; font-size: 14px;">전체 목록 더보기 ></a>
         </div>
     </div>
 

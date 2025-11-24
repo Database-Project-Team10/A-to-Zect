@@ -1,6 +1,7 @@
 package knu.atoz.project;
 
 import knu.atoz.utils.Azconnection;
+import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Repository
 public class ProjectRepository {
 
     public Project findById(Long projectId) {

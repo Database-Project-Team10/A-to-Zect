@@ -1,250 +1,151 @@
 package knu.atoz.project;
 
-
-import knu.atoz.mbti.project.ProjectMbtiController;
-import knu.atoz.member.MemberService;
+import jakarta.servlet.http.HttpSession;
+import knu.atoz.mbti.project.ProjectMbtiService;
+import knu.atoz.member.Member;
 import knu.atoz.participant.ParticipantService;
 import knu.atoz.participant.exception.ParticipantException;
 import knu.atoz.project.dto.ProjectCreateRequestDto;
 import knu.atoz.project.exception.ProjectException;
-import knu.atoz.project.exception.ProjectNotFoundException;
-import knu.atoz.techspec.project.ProjectTechspecController;
-import knu.atoz.utils.InputUtil;
+import knu.atoz.techspec.Techspec;
+import knu.atoz.techspec.project.ProjectTechspecService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
-import java.util.Set;
 
+@Controller
+@RequestMapping("/projects")
+@RequiredArgsConstructor
 public class ProjectController {
 
-    private final MemberService memberService;
     private final ProjectService projectService;
     private final ParticipantService participantService;
-    private final ProjectDetailController projectDetailController;
+    private final ProjectTechspecService projectTechspecService;
+    private final ProjectMbtiService projectMbtiService;
 
-    private final ProjectMbtiController projectMbtiController;
-    private final ProjectTechspecController projectTechspecController;
 
-    private final Scanner scanner = new Scanner(System.in);
-
-    // ★ DI 적용: 필요한 모든 객체를 외부에서 주입받음
-    public ProjectController(
-        MemberService memberService,
-        ProjectService projectService,
-        ParticipantService participantService,
-        ProjectDetailController projectDetailController,
-        ProjectMbtiController projectMbtiController,
-        ProjectTechspecController projectTechspecController) {
-
-        this.memberService = memberService;
-        this.projectService = projectService;
-        this.participantService = participantService;
-        this.projectDetailController = projectDetailController;
-        this.projectMbtiController = projectMbtiController;
-        this.projectTechspecController = projectTechspecController;
-    }
-
-    public void showProjectMenu() {
-        while (true) {
-            System.out.println("\n---------- 프로젝트 기능 ----------");
-            if (memberService.isLoggedIn()) {
-                System.out.println("현재 로그인: " + memberService.getCurrentUser().getEmail());
-                System.out.println("1. 프로젝트 목록 보기");
-                System.out.println("2. 프로젝트 생성");
-                System.out.println("3. 프로젝트 참여");
-                System.out.println("4. 프로젝트 삭제");
-                System.out.println("5. 내가 참여 중인 프로젝트 보기 및 활동하기");
-                System.out.println("b. 뒤로 가기");
-            } else {
-                System.out.println("1. 프로젝트 목록 보기");
-                System.out.println("b. 뒤로 가기");
-            }
-
-            System.out.print("메뉴를 선택하세요: ");
-            String choice = scanner.nextLine();
-
-            boolean keepGoing;
-            if (memberService.isLoggedIn()) {
-                keepGoing = handleLoggedInMenu(choice);
-            } else {
-                keepGoing = handleGuestMenu(choice);
-            }
-
-            if (!keepGoing) {
-                return;
-            }
-        }
-    }
-
-    private boolean handleLoggedInMenu(String choice) {
-        switch (choice) {
-            case "1":
-                handleListProjects();
-                break;
-
-            case "2":
-                handleCreateProject();
-                break;
-
-            case "3":
-                handleJoinProject();
-                break;
-
-            case "4":
-                handleDeleteProject();
-                break;
-
-            case "5":
-                handleMyProjectDetail();
-                break;
-
-            case "b":
-                return false;
-
-            default:
-                System.out.println("잘못된 입력입니다.");
-        }
-        return true;
-    }
-
-    private boolean handleGuestMenu(String choice) {
-        switch (choice) {
-            case "1":
-                handleListProjects();
-                break;
-
-            case "b":
-                return false;
-
-            default:
-                System.out.println("잘못된 입력입니다.");
-        }
-        return true;
-    }
-
-    private void handleListProjects() {
-        try {
-            String input = InputUtil.getInput(scanner, "보고 싶은 프로젝트 개수를 입력하세요(최신순)");
-            int cnt = Integer.parseInt(input);
-
-            List<Project> list = projectService.getProjectList(cnt);
-            showProjectList(list);
-
-        } catch (InputUtil.CancelException e) {
-            System.out.println("\n[!] 목록 조회가 취소되었습니다.");
-        } catch (NumberFormatException e) {
-            System.out.println("[오류] 숫자를 입력해주세요.");
+    // 2. 프로젝트 생성 '페이지' 보여주기 (GET /projects/create)
+    @GetMapping("/create")
+    public String showCreateForm(HttpSession session, Model model) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/members/login";
         }
 
-        pause();
+        model.addAttribute("projectDto", new ProjectCreateRequestDto());
+        return "project/create";
     }
 
-    private void handleCreateProject() {
-        System.out.println("---------- 프로젝트 생성 ----------");
+    // 3. 프로젝트 생성 '처리' (POST /projects/create)
+    @PostMapping("/create")
+    public String createProject(@ModelAttribute ProjectCreateRequestDto dto,
+                                HttpSession session,
+                                Model model) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/members/login";
+        }
 
         try {
-            String title = InputUtil.getInput(scanner, "프로젝트 제목");
-            String description = InputUtil.getInput(scanner, "프로젝트 설명");
+            // 작성자 ID 주입
+            dto.setMemberId(loginMember.getId());
 
-            Set<String> techSpecs = projectTechspecController.inputTechSpecs();
-            Map<Long, String> mbtiMap = projectMbtiController.inputMbti();
+            // 서비스 호출 (DTO 안에 테크스펙, MBTI 정보가 다 들어있다고 가정)
+            projectService.createProject(dto);
 
-            ProjectCreateRequestDto projectCreateRequestDto = new ProjectCreateRequestDto(
-                    memberService.getCurrentUser().getId(),
-                    title,
-                    description,
-                    techSpecs,
-                    mbtiMap
-            );
+            return "redirect:/"; // 목록으로 이동
 
-            Project newProject = projectService.createProject(projectCreateRequestDto);
-
-            if (newProject != null) {
-            } else {
-                System.out.println("프로젝트 생성에 실패했습니다.");
-            }
-
-        } catch (InputUtil.CancelException e) {
-            System.out.println("\n[!] 프로젝트 생성이 취소되었습니다.");
         } catch (ProjectException e) {
-            System.out.println("[오류] " + e.getMessage());
-        } catch (Exception e) {
-            System.out.println("[오류] " + e.getMessage());
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("projectDto", dto); // 입력했던 내용 유지
+            return "project/create";
         }
-
-        pause();
     }
 
-    private void handleJoinProject() {
+    // 4. 프로젝트 참여하기 (POST /projects/{id}/join)
+    @PostMapping("/{projectId}/join")
+    public String joinProject(@PathVariable Long projectId,
+                              HttpSession session,
+                              Model model) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/members/login";
+        }
+
         try {
-            Long projectId = InputUtil.getLong(scanner, "참여하고 싶은 프로젝트 ID");
-
-            participantService.joinProject(projectId, memberService.getCurrentUser().getId());
-            System.out.println("프로젝트 참여 성공!");
-
-        } catch (InputUtil.CancelException e) {
-            System.out.println("\n[!] 프로젝트 참여가 취소되었습니다.");
+            participantService.joinProject(projectId, loginMember.getId());
+            return "redirect:/projects/my"; // '내 프로젝트' 목록으로 이동
         } catch (ParticipantException | ProjectException e) {
-            System.out.println("[오류]: " + e.getMessage());
+            // 에러 발생 시 목록 페이지로 돌아가면서 에러 파라미터 전달 (간단한 처리)
+            return "redirect:/projects?error=" + e.getMessage();
         }
-
-        pause();
     }
 
-    private void handleDeleteProject() {
-        showProjectList(projectService.getMyLeaderProjectList(memberService.getCurrentUser()));
+    // 5. 내가 참여 중인 프로젝트 보기 (GET /projects/my)
+    @GetMapping("/my")
+    public String showMyProjects(HttpSession session, Model model) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/members/login";
+        }
+
+        List<Project> myProjects = projectService.getMyProjectList(loginMember);
+        model.addAttribute("projects", myProjects);
+
+        return "project/my-list";
+    }
+
+    // 6. 프로젝트 삭제 (POST /projects/{id}/delete)
+    @PostMapping("/{projectId}/delete")
+    public String deleteProject(@PathVariable Long projectId, HttpSession session) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/members/login";
+        }
+
+        // 본인 확인 로직은 Service 내부 혹은 여기서 처리
+        try {
+            projectService.deleteProject(projectId, loginMember.getId());
+        } catch (Exception e) {
+            // 삭제 실패 시 처리 (생략)
+        }
+
+        return "redirect:/projects/my";
+    }
+
+    @GetMapping("/{projectId}")
+    public String showProjectDetail(@PathVariable Long projectId,
+                                    HttpSession session,
+                                    Model model) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/members/login";
+        }
 
         try {
-            Long projectId = InputUtil.getLong(scanner, "삭제할 프로젝트의 ID");
-            String confirm = InputUtil.getInput(scanner, "정말 삭제하시겠습니까? (Y/N)");
+            // 1. 프로젝트 기본 정보 조회
+            Project project = projectService.getMyProjectById(loginMember, projectId);
+            model.addAttribute("project", project);
 
-            if (!"Y".equalsIgnoreCase(confirm)) {
-                System.out.println("삭제 취소");
-                return;
-            }
+            // 2. [추가] 기술 스택 조회 (서비스에 메서드가 있다고 가정)
+            // 만약 Set<String>이나 List<String>을 반환한다면 그대로 모델에 넣습니다.
+            List<Techspec> techSpecs = projectTechspecService.getProjectTechspecs(project);
+            model.addAttribute("techSpecs", techSpecs);
 
-            projectService.deleteProject(projectId, memberService.getCurrentUser().getId());
+            // 3. [추가] MBTI 정보 조회
+            Map<Long, String> mbtiMap = projectMbtiService.getMbtiMapByProjectId(projectId);
+            model.addAttribute("mbtiMap", mbtiMap);
 
-        } catch (InputUtil.CancelException e) {
-            System.out.println("\n[!] 프로젝트 삭제가 취소되었습니다.");
-        } catch (ProjectException e) {
-            System.out.println("[오류]: " + e.getMessage());
+            return "project/detail";
+
+        } catch (Exception e) {
+            return "redirect:/projects/my?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
         }
-
-        pause();
-    }
-
-    private void handleMyProjectDetail() {
-        showProjectList(projectService.getMyProjectList(memberService.getCurrentUser()));
-
-        try {
-            Long projectId = InputUtil.getLong(scanner, "접속할 프로젝트 ID");
-
-            Project myProject = projectService.getMyProjectById(memberService.getCurrentUser(), projectId);
-            projectDetailController.showDetailMenu(myProject.getId());
-
-        } catch (InputUtil.CancelException e) {
-            System.out.println("\n[!] 접속이 취소되었습니다.");
-        } catch (ProjectNotFoundException e) {
-            System.out.println("[오류] 참여 중인 프로젝트에만 접속할 수 있습니다.");
-        }
-
-        pause();
-    }
-
-    private void showProjectList(List<Project> projectList) {
-        System.out.println("---------- 프로젝트 목록 ----------");
-        if (projectList.isEmpty()) {
-            System.out.println("(프로젝트가 없습니다)");
-            return;
-        }
-        for (Project p : projectList) {
-            System.out.println(p.getId() + ". " + p.getTitle());
-        }
-    }
-    private void pause() {
-        System.out.print("\n엔터키를 누르면 프로젝트 기능으로 돌아갑니다.");
-        scanner.nextLine();
     }
 }

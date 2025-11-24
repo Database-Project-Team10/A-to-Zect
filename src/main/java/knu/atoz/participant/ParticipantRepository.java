@@ -2,9 +2,11 @@ package knu.atoz.participant;
 
 
 import knu.atoz.utils.Azconnection;
+import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 
+@Repository
 public class ParticipantRepository {
 
     public boolean save(Long projectId, Long memberId){

@@ -3,7 +3,9 @@ package knu.atoz.participant;
 import knu.atoz.participant.exception.ParticipantAlreadyExistsException;
 import knu.atoz.project.ProjectService;
 import knu.atoz.project.exception.ProjectNotFoundException;
+import org.springframework.stereotype.Service;
 
+@Service
 public class ParticipantService {
     private final ParticipantRepository participantRepository;
     private final ProjectService projectService;

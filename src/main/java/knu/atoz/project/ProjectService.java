@@ -13,11 +13,13 @@ import knu.atoz.techspec.Techspec;
 import knu.atoz.techspec.TechspecRepository;
 import knu.atoz.techspec.project.ProjectTechspecRepository;
 import knu.atoz.utils.Azconnection;
+import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
+@Service
 public class ProjectService {
 
     private final ProjectRepository projectRepository;

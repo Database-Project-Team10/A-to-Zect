@@ -1,6 +1,7 @@
 package knu.atoz.mbti.project;
 
 import knu.atoz.utils.Azconnection;
+import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,6 +10,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+@Repository
 public class ProjectMbtiRepository {
 
     public Map<Long, String> findMbtiMapByProjectId(Long projectId) {

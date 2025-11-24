@@ -2,6 +2,7 @@ package knu.atoz.techspec.project;
 
 import knu.atoz.techspec.Techspec;
 import knu.atoz.utils.Azconnection;
+import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -10,6 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Repository
 public class ProjectTechspecRepository {
 
     public List<Techspec> findTechspecsByProjectId(Long projectId) {

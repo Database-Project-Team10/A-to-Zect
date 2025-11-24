@@ -2,12 +2,14 @@ package knu.atoz.techspec;
 
 
 import knu.atoz.utils.Azconnection;
+import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+@Repository
 public class TechspecRepository {
 
     public Long createTechspec(Connection conn, String techName) throws SQLException {

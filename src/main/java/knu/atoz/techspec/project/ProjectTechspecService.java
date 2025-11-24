@@ -7,11 +7,13 @@ import knu.atoz.techspec.exception.TechspecAlreadyExistsException;
 import knu.atoz.techspec.exception.TechspecInvalidException;
 import knu.atoz.techspec.exception.TechspecNotFoundException;
 import knu.atoz.utils.Azconnection;
+import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
+@Service
 public class ProjectTechspecService {
 
     private final TechspecRepository techspecRepository;

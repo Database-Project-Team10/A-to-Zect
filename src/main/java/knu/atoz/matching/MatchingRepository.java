@@ -1,6 +1,7 @@
 package knu.atoz.matching;
 
 import knu.atoz.utils.Azconnection;
+import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,10 +10,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Repository
 public class MatchingRepository {
-    //MBTI 기반 매칭 (우선순위 상위 10개)
+    
     public List<MatchedProject> findMbtiMatches(Long memberId) {
         List<MatchedProject> results = new ArrayList<>();
+
         String sql =
                 "WITH UserMBTI AS ( " +
                         "    SELECT mbti_id, selected_option FROM MemberMbti WHERE member_id = ? " +
@@ -24,16 +27,11 @@ public class MatchingRepository {
                         "    JOIN UserMBTI um ON pm.mbti_id = um.mbti_id AND pm.preferred_option = um.selected_option " +
                         "    JOIN Project p ON pm.project_id = p.id " +
                         "    GROUP BY p.id, p.title " +
-                        "), " +
-                        "RankedMatches AS ( " +
-                        "    SELECT id, title, match_count, matching_traits, " +
-                        "           DENSE_RANK() OVER (ORDER BY match_count DESC) AS rnk " +
-                        "    FROM ProjectMatches " +
                         ") " +
                         "SELECT id, title, match_count, matching_traits " +
-                        "FROM RankedMatches " +
-                        "WHERE rnk = 1 " +
-                        "FETCH FIRST 10 ROWS ONLY";
+                        "FROM ProjectMatches " +
+                        "ORDER BY match_count DESC, id DESC " + 
+                        "FETCH FIRST 9 ROWS ONLY";
 
         try (Connection conn = Azconnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -42,11 +40,15 @@ public class MatchingRepository {
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
+                    
+                    int count = rs.getInt("match_count");
+                    String traits = rs.getString("matching_traits");
+
                     results.add(new MatchedProject(
                             rs.getLong("id"),
                             rs.getString("title"),
-                            rs.getInt("match_count"),
-                            "일치 성향: " + rs.getString("matching_traits")
+                            count,
+                            count + "개 일치 (" + traits + ")"
                     ));
                 }
             }
@@ -57,7 +59,7 @@ public class MatchingRepository {
     }
 
 
-     //테크스펙 기반 매칭 (일치 개수 많은 순 상위 10개)
+     
     public List<MatchedProject> findTechMatches(Long memberId) {
         List<MatchedProject> results = new ArrayList<>();
         String sql =
@@ -72,7 +74,7 @@ public class MatchingRepository {
                         "JOIN Techspec t ON pt.techspec_id = t.id " +
                         "GROUP BY p.id, p.title " +
                         "ORDER BY match_count DESC " +
-                        "FETCH FIRST 10 ROWS ONLY";
+                        "FETCH FIRST 9 ROWS ONLY";
 
         try (Connection conn = Azconnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -96,7 +98,7 @@ public class MatchingRepository {
     }
 
 
-     //종합 매칭 (MBTI + Techspec 점수)
+     
     public List<MatchedProject> findCombinedMatches(Long memberId) {
         List<MatchedProject> results = new ArrayList<>();
         String sql =
@@ -124,7 +126,7 @@ public class MatchingRepository {
                         "JOIN MbtiMatches mm ON p.id = mm.project_id " +
                         "JOIN TechMatches tm ON p.id = tm.project_id " +
                         "ORDER BY total_score DESC " +
-                        "FETCH FIRST 10 ROWS ONLY";
+                        "FETCH FIRST 9 ROWS ONLY";
 
         try (Connection conn = Azconnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {

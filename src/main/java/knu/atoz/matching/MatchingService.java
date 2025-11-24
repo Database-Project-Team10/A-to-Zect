@@ -1,7 +1,10 @@
 package knu.atoz.matching;
 
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 
+@Service
 public class MatchingService {
 
     private final MatchingRepository matchingRepository;

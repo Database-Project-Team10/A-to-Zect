@@ -11,13 +11,9 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/documents")
-public class DocumentWebController { // 👈 1. 클래스 이름 변경: DocumentController -> DocumentWebController
-
+public class DocumentWebController {
     private final DocumentService documentService;
 
-    // 👈 2. 불필요한 필드 (MemberService memberService, Scanner scanner) 삭제됨
-
-    // 👈 3. 생성자 이름 변경: DocumentWebController(DocumentService documentService)로 통일
     public DocumentWebController(DocumentService documentService) {
         this.documentService = documentService;
     }
@@ -29,7 +25,6 @@ public class DocumentWebController { // 👈 1. 클래스 이름 변경: Documen
             model.addAttribute("documents", documents);
             model.addAttribute("projectId", projectId);
 
-            // RedirectAttributes에 담긴 메시지를 모델에 추가 (삭제/수정 성공 메시지 표시용)
             if (model.asMap().containsKey("message")) {
                 model.addAttribute("message", model.asMap().get("message"));
             }
@@ -51,11 +46,14 @@ public class DocumentWebController { // 👈 1. 클래스 이름 변경: Documen
         model.addAttribute("isNew", true);
         model.addAttribute("projectId", projectId);
 
-        // 오류 메시지 처리 (등록 실패 시 폼에 메시지 표시용)
-        if (model.asMap().containsKey("error")) {
-            model.addAttribute("error", model.asMap().get("error"));
-        }
+        model.addAttribute("actionUrl", "/documents?projectId=" + projectId);
 
+
+        if (model.asMap().containsKey("error")) {
+
+            model.addAttribute("error", model.asMap().get("error"));
+
+        }
         return "document/form";
     }
 
@@ -84,14 +82,14 @@ public class DocumentWebController { // 👈 1. 클래스 이름 변경: Documen
             model.addAttribute("isNew", false);
             model.addAttribute("projectId", projectId);
 
-            // 오류 메시지 처리 (수정 실패 시 폼에 메시지 표시용)
+            model.addAttribute("actionUrl", "/documents/" + id + "?projectId=" + projectId);
+
             if (model.asMap().containsKey("error")) {
                 model.addAttribute("error", model.asMap().get("error"));
             }
 
             return "document/form";
         } catch (DocumentException e) {
-            // 문서 ID가 유효하지 않으면 목록 페이지로 이동
             return "redirect:/documents?projectId=" + projectId;
         }
     }

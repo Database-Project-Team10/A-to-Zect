@@ -1,34 +1,35 @@
-package knu.atoz.utils;
+package knu.atoz.utils; // 패키지명 확인
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class Azconnection {
 
-    public static final String URL = "jdbc:oracle:thin:@localhost:1521:xe";
-    public static final String USER_NAME = "az";
-    public static final String USER_PASSWORD = "dtob";
-
-    public Azconnection() {}
-
-    // 드라이버 로드
-    static {
-        try {
-            Class.forName("oracle.jdbc.driver.OracleDriver");
-        } catch (ClassNotFoundException e) {
-            System.err.println("Failed to load Oracle driver: " + e.getMessage());
-            System.exit(1);
-        }
-    }
-
     public static Connection getConnection() {
+        Connection conn = null;
         try {
-            Connection conn = DriverManager.getConnection(URL, USER_NAME, USER_PASSWORD);
-            return conn;
-        } catch (SQLException ex) {
-            System.err.println("Database connection or operation failed: " + ex.getMessage());
-            ex.printStackTrace();
-            return null;
-        }
-    }
+            // 1. 환경 변수에서 URL을 가져옴 (도커용)
+            String dbUrl = System.getenv("SPRING_DATASOURCE_URL");
+            String dbUser = System.getenv("SPRING_DATASOURCE_USERNAME");
+            String dbPassword = System.getenv("SPRING_DATASOURCE_PASSWORD");
+            System.out.println("dbUrl: " + dbUrl);
+            // 2. 환경 변수가 없으면 로컬 설정 사용 (IntelliJ 실행용)
+            if (dbUrl == null || dbUrl.isEmpty()) {
+                dbUrl = "jdbc:oracle:thin:@localhost:1521:xe"; // 또는 1522 등 본인 로컬 설정
+                dbUser = "az";       // 로컬 아이디
+                dbPassword = "dtob"; // 로컬 비번
+            }
 
+            // 3. 드라이버 로드 및 연결
+            Class.forName("oracle.jdbc.OracleDriver");
+            conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+
+        } catch (ClassNotFoundException e) {
+            System.err.println("드라이버 로드 실패: " + e.getMessage());
+        } catch (SQLException e) {
+            System.err.println("DB 연결 실패: " + e.getMessage());
+        }
+        return conn;
+    }
 }

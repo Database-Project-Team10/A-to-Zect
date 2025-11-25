@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>회의록 아카이브</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .meeting-card { background: white; border: 1px solid #eee; border-radius: 10px; padding: 20px; margin-bottom: 15px; transition: 0.2s; }
+        .meeting-card:hover { border-color: #007bff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .meeting-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .meeting-title { font-size: 1.2rem; font-weight: bold; color: #333; margin: 0; }
+        .meeting-time { font-size: 0.9rem; color: #666; background: #f8f9fa; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 5px;}
+        .meeting-desc { white-space: pre-wrap; color: #555; line-height: 1.6; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee; }
+        
+        .btn-group { display: flex; gap: 5px; }
+        .btn-sm-fixed {
+            height: 32px !important;
+            line-height: 30px !important;
+            padding: 0 12px !important;
+            font-size: 12px !important;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" style="max-width: 800px;">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>📅 회의록 아카이브</h1>
+        <a th:href="@{/projects/{id}(id=${project.id})}" class="btn btn-outline">← 상세로</a>
+    </div>
+
+    <p class="subtitle">
+        <strong th:text="${project.title}">프로젝트명</strong>의 회의 내용을 기록하고 관리합니다.
+    </p>
+    <hr>
+
+    <div th:if="${param.error}" class="error-msg" th:text="${param.error}"></div>
+
+    <div style="text-align: right; margin-bottom: 20px;">
+        <a th:href="@{|/projects/${project.id}/meetings/new|}" class="btn btn-primary">
+            📝 새 회의록 작성
+        </a>
+    </div>
+
+    <div th:if="${meetings == null || meetings.isEmpty()}" class="empty-message">
+        등록된 회의록이 없습니다.
+    </div>
+
+    <div th:each="m : ${meetings}" class="meeting-card">
+        <div class="meeting-header">
+            <div>
+                <h3 class="meeting-title" th:text="${m.title}">회의 제목</h3>
+                
+                <div class="meeting-time">
+                    🕒 
+                    <span th:if="${m.startTime != null}" th:text="${#temporals.format(m.startTime, 'yyyy-MM-dd HH:mm')}">시작</span>
+                    <span th:if="${m.startTime != null} and ${m.endTime != null}"> ~ </span>
+                    <span th:if="${m.endTime != null}" th:text="${#temporals.format(m.endTime, 'yyyy-MM-dd HH:mm')}">종료</span>
+                    <span th:if="${m.startTime == null} and ${m.endTime == null}">(시간 미정)</span>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <a th:href="@{|/projects/${project.id}/meetings/${m.id}/edit|}" class="btn btn-outline btn-sm-fixed">수정</a>
+                <form th:action="@{|/projects/${project.id}/meetings/${m.id}/delete|}" method="post" style="margin:0;">
+                    <button type="submit" class="btn btn-danger btn-sm-fixed" onclick="return confirm('정말 삭제하시겠습니까?');">삭제</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="meeting-desc" th:text="${m.description}">
+            회의 내용 본문...
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

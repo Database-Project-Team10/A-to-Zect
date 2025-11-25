@@ -10,6 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,30 +20,27 @@ public class DocumentService {
 
     private final DocumentRepository documentRepository;
 
+    // 파일 저장 기본 경로 (프로젝트 루트/uploads)
+    private final String uploadDir = System.getProperty("user.dir") + "/uploads";
+
     public DocumentService(DocumentRepository documentRepository) {
         this.documentRepository = documentRepository;
     }
 
     /**
-     * 문서 생성 (파일 업로드 필수)
+     * 문서 생성
      */
     public void createDocument(Long projectId, DocumentRequestDto dto) {
-        // 제목 검증
         if (dto.getTitle() == null || dto.getTitle().trim().isEmpty()) {
             throw new InvalidDocumentInputException("문서 제목을 입력해주세요.");
         }
 
         try {
-            // 1. 파일 저장 수행 (파일 없으면 null 반환)
             String savedPath = saveFile(dto.getFile());
-
-            // 생성 시에는 파일이 필수
             if (savedPath == null) {
                 throw new DocumentFileNotExistException();
             }
 
-            // 2. DB 저장 (Document 생성자 순서: id=null, projectId, title, location)
-            // (Repository의 save 메서드 시그니처나 Entity 생성자에 맞춰 조정 필요)
             Document document = new Document(projectId, dto.getTitle(), savedPath);
             documentRepository.save(document);
 
@@ -63,40 +62,37 @@ public class DocumentService {
     }
 
     /**
-     * 문서 수정 (파일은 선택 사항)
-     * - 새 파일이 있으면 교체
-     * - 없으면 기존 파일 유지
+     * 문서 수정 (기존 파일 삭제 로직 강화)
      */
     public void updateDocument(Long documentId, Long projectId, DocumentRequestDto requestDto) {
-        // 1. 기존 문서 조회
         Document targetDocument = documentRepository.findById(documentId);
-        if (targetDocument == null) {
-            throw new DocumentNotFoundException();
-        }
+        if (targetDocument == null) throw new DocumentNotFoundException();
 
-        // 2. 권한/소속 체크
         if (!targetDocument.getProjectId().equals(projectId)) {
             throw new DocumentAccessException("해당 문서는 이 프로젝트에 속하지 않아 수정할 수 없습니다.");
         }
 
-        // 3. 제목 검증
         if (requestDto.getTitle() == null || requestDto.getTitle().trim().isEmpty()) {
             throw new InvalidDocumentInputException("제목은 비워둘 수 없습니다.");
         }
 
         try {
-            // 4. 파일 처리 로직
-            String newLocation = targetDocument.getLocation(); // 기본값: 기존 경로 유지
+            // [중요] 기존 경로를 별도 변수에 확실하게 백업
+            String oldPath = targetDocument.getLocation();
+            String newPath = oldPath; // 기본값: 변경 없음
 
-            // 사용자가 새 파일을 업로드했는지 확인
+            // 새 파일이 업로드되었는지 확인
             if (requestDto.getFile() != null && !requestDto.getFile().isEmpty()) {
-                newLocation = saveFile(requestDto.getFile()); // 새 경로로 덮어쓰기
+                // 1. 새 파일 저장
+                newPath = saveFile(requestDto.getFile());
 
-                // (선택사항) 여기서 기존 파일(targetDocument.getLocation())을 디스크에서 삭제하는 로직을 추가할 수도 있음
+                // 2. 기존 파일 물리적 삭제 (백업해둔 oldPath 사용)
+                System.out.println("[Update] 기존 파일 삭제 시도: " + oldPath);
+                deletePhysicalFile(oldPath);
             }
 
-            // 5. 업데이트 실행 (id, projectId, title, location)
-            Document updateDoc = new Document(documentId, projectId, requestDto.getTitle(), newLocation);
+            // 3. DB 업데이트
+            Document updateDoc = new Document(documentId, projectId, requestDto.getTitle(), newPath);
             documentRepository.update(updateDoc);
 
         } catch (IOException e) {
@@ -104,69 +100,101 @@ public class DocumentService {
         }
     }
 
+    /**
+     * 문서 삭제
+     */
     public void deleteDocument(Long documentId, Long expectedProjectId) {
         Document targetDocument = documentRepository.findById(documentId);
-
-        if (targetDocument == null) {
-            throw new DocumentNotFoundException();
-        }
+        if (targetDocument == null) throw new DocumentNotFoundException();
 
         if (!targetDocument.getProjectId().equals(expectedProjectId)) {
             throw new DocumentAccessException("해당 문서는 이 프로젝트에 속하지 않아 삭제할 수 없습니다.");
         }
 
-        // (선택사항) 여기서 실제 파일(targetDocument.getLocation())을 삭제하는 로직 추가 가능
+        // [중요] 삭제할 경로 백업
+        String pathToDelete = targetDocument.getLocation();
 
+        // 1. DB 삭제
         documentRepository.delete(documentId);
+
+        // 2. 물리적 파일 삭제
+        System.out.println("[Delete] 파일 삭제 시도: " + pathToDelete);
+        deletePhysicalFile(pathToDelete);
     }
 
-    // 파일 저장 헬퍼 메서드
-    private String saveFile(MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) {
-            return null;
-        }
-
-        // 1. 저장할 폴더 지정 (프로젝트 루트/uploads)
-        String projectPath = System.getProperty("user.dir") + "/uploads";
-        File directory = new File(projectPath);
-
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
-
-        // 2. 파일명 중복 방지 (UUID)
-        UUID uuid = UUID.randomUUID();
-        String fileName = uuid + "_" + file.getOriginalFilename();
-
-        // 3. 실제 저장
-        File saveFile = new File(directory, fileName);
-        file.transferTo(saveFile);
-
-        // 4. DB 저장용 경로 반환
-        return "/uploads/" + fileName;
-    }
-
+    /**
+     * 다운로드용 파일 객체 반환
+     */
     public File getPhysicalFile(Long documentId) {
-        Document document = documentRepository.findById(documentId);
-        if (document == null) {
-            throw new DocumentNotFoundException();
-        }
-
-        // DB에 저장된 경로: /uploads/uuid_filename.ext
-        // 실제 저장 경로: System.getProperty("user.dir") + /uploads/uuid_filename.ext
-
-        // 1. "/uploads/" 문자열 제거하여 순수 파일명만 추출
-        String path = document.getLocation();
-        String fileName = path.substring(path.lastIndexOf("/") + 1);
-
-        // 2. 전체 경로 조립
-        String projectPath = System.getProperty("user.dir") + "/uploads";
-        File file = new File(projectPath, fileName);
+        Document document = getDocument(documentId);
+        File file = getFileFromPath(document.getLocation());
 
         if (!file.exists()) {
             throw new DocumentFileNotExistException();
         }
-
         return file;
+    }
+
+    // --- Private Helper Methods ---
+
+    // 파일 저장
+    private String saveFile(MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) return null;
+
+        File directory = new File(uploadDir);
+        if (!directory.exists()) directory.mkdirs();
+
+        UUID uuid = UUID.randomUUID();
+        String originalFilename = file.getOriginalFilename();
+        // 파일명에 한글이 있을 경우 안전하게 처리
+        if (originalFilename == null) originalFilename = "unknown_file";
+
+        String fileName = uuid + "_" + originalFilename;
+        File saveFile = new File(directory, fileName);
+
+        file.transferTo(saveFile);
+
+        return "/uploads/" + fileName;
+    }
+
+    // 물리적 파일 삭제
+    private void deletePhysicalFile(String dbPath) {
+        if (dbPath == null || dbPath.isEmpty()) return;
+
+        try {
+            File file = getFileFromPath(dbPath);
+
+            // 디버깅용 로그
+            System.out.println("   -> 삭제 대상 경로: " + file.getAbsolutePath());
+            System.out.println("   -> 파일 존재 여부: " + file.exists());
+
+            if (file.exists()) {
+                boolean deleted = file.delete();
+                if (deleted) {
+                    System.out.println("   -> [성공] 파일이 삭제되었습니다.");
+                } else {
+                    System.err.println("   -> [실패] 파일 삭제에 실패했습니다. (권한 또는 사용 중)");
+                }
+            } else {
+                System.out.println("   -> [무시] 삭제할 파일이 이미 없습니다.");
+            }
+        } catch (Exception e) {
+            System.err.println("   -> [에러] 파일 삭제 중 예외 발생: " + e.getMessage());
+        }
+    }
+
+    // DB 경로 -> 실제 File 객체 변환
+    private File getFileFromPath(String dbPath) {
+        // dbPath 예시: "/uploads/uuid_파일명.pdf"
+        // 윈도우/맥 경로 구분자 차이 해결을 위해 replace 사용
+        String cleanPath = dbPath.replace("\\", "/");
+
+        // 마지막 슬래시 뒤의 파일명만 추출
+        String fileName = cleanPath.substring(cleanPath.lastIndexOf("/") + 1);
+
+        // URL 디코딩 (파일명에 공백이나 특수문자가 있을 경우 대비)
+        fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8);
+
+        return new File(uploadDir, fileName);
     }
 }

@@ -1,272 +1,185 @@
 package knu.atoz.meeting;
 
+import jakarta.servlet.http.HttpSession;
 import knu.atoz.meeting.dto.MeetingRequestDto;
-import knu.atoz.meeting.exception.MeetingException;
-import knu.atoz.member.MemberService;
-import knu.atoz.utils.InputUtil;
+import knu.atoz.member.Member;
+import knu.atoz.participant.ParticipantService;
+import knu.atoz.project.Project;
+import knu.atoz.project.ProjectService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Scanner;
 
+@Controller
+@RequestMapping("/projects/{projectId}/meetings")
+@RequiredArgsConstructor
 public class MeetingController {
 
     private final MeetingService meetingService;
-    private final MemberService memberService;
-    private final Scanner scanner;
-    private final DateTimeFormatter formatter;
+    private final ProjectService projectService;
+    private final ParticipantService participantService;
 
-    public MeetingController(
-            MeetingService meetingService,
-            MemberService memberService,
-            Scanner scanner
-    ) {
-        this.meetingService = meetingService;
-        this.memberService = memberService;
-        this.scanner = scanner;
-        this.formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    }
+    // 1. 회의록 목록 조회
+    @GetMapping
+    public String listMeetings(@PathVariable Long projectId,
+                               HttpSession session,
+                               Model model) {
+        Member loginMember = getLoginMember(session);
+        if (loginMember == null) return "redirect:/members/login";
 
-
-    public void showMeetingMenu(Long projectId) {
-    	while (true) {
-            printMenuHeader(projectId);
-
-            if (!memberService.isLoggedIn()) {
-                System.out.println("로그인이 필요합니다.");
-                return;
-            }
-
-            String choice = getMenuChoice();
-
-            switch (choice) {
-                case "1":
-                    handleShowAllMeetings(projectId);
-                    break;
-
-                case "2":
-                    handleCreateMeeting(projectId);
-                    break;
-
-                case "3":
-                    handleUpdateMeeting(projectId);
-                    break;
-
-                case "4":
-                    handleDeleteMeeting(projectId);
-                    break;
-
-                case "b":
-                    return;
-
-                default:
-                    System.out.println("잘못된 입력입니다.");
-            }
+        if (!isTeamMember(projectId, loginMember.getId())) {
+            return "redirect:/projects/" + projectId + "?error=" + encode("접근 권한이 없습니다.");
         }
-    }
-    private void printMenuHeader(Long projectId) {
-        System.out.println("\n---------- 회의록 기능 ----------");
-        System.out.println("현재 로그인: " + memberService.getCurrentUser().getEmail());
-        System.out.println("현재 접속 중인 프로젝트: " + projectId);
-        System.out.println("1. 전체 회의록 보기");
-        System.out.println("2. 회의록 작성");
-        System.out.println("3. 회의록 수정");
-        System.out.println("4. 회의록 삭제");
-        System.out.println("b. 뒤로 가기");
-    }
 
-    private String getMenuChoice() {
-        System.out.print("메뉴를 선택하세요: ");
-        return scanner.nextLine();
-    }
-
-    private void handleShowAllMeetings(Long projectId) {
         try {
+            Project project = projectService.getProject(projectId);
             List<Meeting> meetings = meetingService.getMeetingsByProject(projectId);
-            showMeetingList(meetings);
-        } catch (MeetingException e) {
-            printError(e);
+
+            model.addAttribute("project", project);
+            model.addAttribute("meetings", meetings);
+
+            return "meeting/list";
+
+        } catch (Exception e) {
+            return "redirect:/projects/" + projectId + "?error=" + encode(e.getMessage());
         }
-        pause();
     }
 
-    private void handleCreateMeeting(Long projectId) {
-        System.out.println("---------- 회의록 작성 ----------");
-        
+    // 2. 작성 폼
+    @GetMapping("/new")
+    public String showCreateForm(@PathVariable Long projectId,
+                                 HttpSession session,
+                                 Model model) {
+        Member loginMember = getLoginMember(session);
+        if (loginMember == null) return "redirect:/members/login";
+
+        if (!isTeamMember(projectId, loginMember.getId())) {
+            return "redirect:/projects/" + projectId + "/meetings?error=" + encode("회의록 작성 권한이 없습니다.");
+        }
+
+        Project project = projectService.getProject(projectId);
+
+        model.addAttribute("project", project);
+        model.addAttribute("meetingDto", new MeetingRequestDto());
+        model.addAttribute("isNew", true);
+
+        return "meeting/form";
+    }
+
+    // 3. 작성 처리
+    @PostMapping("/new")
+    public String createMeeting(@PathVariable Long projectId,
+                                @ModelAttribute MeetingRequestDto dto,
+                                HttpSession session,
+                                Model model) {
+        Member loginMember = getLoginMember(session);
+        if (loginMember == null) return "redirect:/members/login";
+
         try {
-            String title = InputUtil.getInput(scanner, "회의록 제목");
-            String description = InputUtil.getInput(scanner, "회의록 내용");
-
-            LocalDateTime startTime = parseDateTime("회의 시작 시간 (YYYY-MM-DD HH:MM): ");
-            LocalDateTime endTime = parseDateTime("회의 종료 시간 (YYYY-MM-DD HH:MM): ");
-            
-            MeetingRequestDto requestDto = new MeetingRequestDto(title, description, startTime, endTime);
-            
-            meetingService.createMeeting(projectId, requestDto);
-            
-            System.out.println("회의록이 성공적으로 작성되었습니다.");
-
-        }catch (InputUtil.CancelException e) {
-            System.out.println("\n[!] 회의록 작성이 취소되었습니다.");
-        } catch (MeetingException e) {
-            printError(e);
+            meetingService.createMeeting(projectId, dto);
+            return "redirect:/projects/" + projectId + "/meetings";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("project", projectService.getProject(projectId));
+            model.addAttribute("meetingDto", dto);
+            model.addAttribute("isNew", true);
+            return "meeting/form";
         }
-        
-        pause();
     }
 
-    private void handleUpdateMeeting(Long projectId) {
-        System.out.println("---------- 회의록 수정 ----------");
+    // 4. 수정 폼
+    @GetMapping("/{meetingId}/edit")
+    public String showEditForm(@PathVariable Long projectId,
+                               @PathVariable Long meetingId,
+                               HttpSession session,
+                               Model model) {
+        Member loginMember = getLoginMember(session);
+        if (loginMember == null) return "redirect:/members/login";
+
+        if (!isTeamMember(projectId, loginMember.getId())) {
+            return "redirect:/projects/" + projectId + "/meetings?error=" + encode("수정 권한이 없습니다.");
+        }
+
         try {
-            List<Meeting> meetings = meetingService.getMeetingsByProject(projectId);
-            showMeetingList(meetings);
-        } catch (MeetingException e) {
-            printError(e);
-            pause(); 
-            return; 
+            Project project = projectService.getProject(projectId);
+            Meeting meeting = meetingService.getMeeting(meetingId);
+
+            MeetingRequestDto dto = new MeetingRequestDto(
+                    meeting.getTitle(),
+                    meeting.getDescription(),
+                    meeting.getStartTime(),
+                    meeting.getEndTime()
+            );
+
+            model.addAttribute("project", project);
+            model.addAttribute("meeting", meeting);
+            model.addAttribute("meetingDto", dto);
+            model.addAttribute("isNew", false);
+
+            return "meeting/form";
+
+        } catch (Exception e) {
+            return "redirect:/projects/" + projectId + "/meetings?error=" + encode(e.getMessage());
         }
-        
+    }
+
+    // 5. 수정 처리
+    @PostMapping("/{meetingId}/edit")
+    public String updateMeeting(@PathVariable Long projectId,
+                                @PathVariable Long meetingId,
+                                @ModelAttribute MeetingRequestDto dto,
+                                HttpSession session,
+                                Model model) {
+        Member loginMember = getLoginMember(session);
+        if (loginMember == null) return "redirect:/members/login";
+
         try {
-            Long meetingId = InputUtil.getLong(scanner, "수정할 회의록의 번호");
-            
-            Meeting targetMeeting = meetingService.getMeeting(meetingId);
-
-            String newTitle = promptTitleUpdate(targetMeeting);
-            String newDescription = promptDescriptionUpdate(targetMeeting);
-            LocalDateTime newStartTime = promptStartTimeUpdate(targetMeeting);
-            LocalDateTime newEndTime = promptEndTimeUpdate(targetMeeting);
-
-            MeetingRequestDto requestDto = new MeetingRequestDto(newTitle, newDescription, newStartTime, newEndTime);
-            
-            meetingService.updateMeeting(targetMeeting.getId(), projectId, requestDto);
-            
-            System.out.println("회의록이 성공적으로 수정되었습니다.");
-
-        } catch (InputUtil.CancelException e) {
-            System.out.println("\n[!] 회의록 수정이 취소되었습니다.");
-        }catch (NumberFormatException e) {
-            System.out.println("오류: 유효한 ID 번호를 입력하세요.");
-        } catch (MeetingException e) {
-            printError(e);
-        }
-        
-        pause();
-    }
-
-    private String promptTitleUpdate(Meeting meeting) {
-        while (true) {
-            System.out.print("제목을 수정하시겠습니까? (Y/N, 현재: " + meeting.getTitle() + "): ");
-            String c = scanner.nextLine();
-            if (c.equalsIgnoreCase("Y")) {
-                System.out.print("수정할 제목 입력: ");
-                return scanner.nextLine();
-            } else if (c.equalsIgnoreCase("N")) {
-                return meeting.getTitle();
-            } else { System.out.println("잘못된 입력입니다."); }
+            meetingService.updateMeeting(meetingId, projectId, dto);
+            return "redirect:/projects/" + projectId + "/meetings";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("project", projectService.getProject(projectId));
+            model.addAttribute("meetingDto", dto);
+            model.addAttribute("isNew", false);
+            return "meeting/form";
         }
     }
 
-    private String promptDescriptionUpdate(Meeting meeting) {
-        while (true) {
-            System.out.print("내용을 수정하시겠습니까? (Y/N): ");
-            String c = scanner.nextLine();
-            if (c.equalsIgnoreCase("Y")) {
-                System.out.print("수정할 내용 입력: ");
-                return scanner.nextLine();
-            } else if (c.equalsIgnoreCase("N")) {
-                return meeting.getDescription();
-            } else { System.out.println("잘못된 입력입니다."); }
-        }
-    }
+    // 6. 삭제 처리
+    @PostMapping("/{meetingId}/delete")
+    public String deleteMeeting(@PathVariable Long projectId,
+                                @PathVariable Long meetingId,
+                                HttpSession session) {
+        Member loginMember = getLoginMember(session);
+        if (loginMember == null) return "redirect:/members/login";
 
-    private LocalDateTime promptStartTimeUpdate(Meeting meeting) {
-        while (true) {
-            String current = (meeting.getStartTime() != null) ? meeting.getStartTime().format(formatter) : "없음";
-            System.out.print("시작 시간을 수정하시겠습니까? (Y/N, 현재: " + current + "): ");
-            String c = scanner.nextLine();
-            if (c.equalsIgnoreCase("Y")) {
-                return parseDateTime("새 시작 시간 (YYYY-MM-DD HH:MM) : ");
-            } else if (c.equalsIgnoreCase("N")) {
-                return meeting.getStartTime();
-            } else { System.out.println("잘못된 입력입니다."); }
+        if (!isTeamMember(projectId, loginMember.getId())) {
+            return "redirect:/projects/" + projectId + "/meetings?error=" + encode("삭제 권한이 없습니다.");
         }
-    }
 
-    private LocalDateTime promptEndTimeUpdate(Meeting meeting) {
-        while (true) {
-            String current = (meeting.getEndTime() != null) ? meeting.getEndTime().format(formatter) : "없음";
-            System.out.print("종료 시간을 수정하시겠습니까? (Y/N, 현재: " + current + "): ");
-            String c = scanner.nextLine();
-            if (c.equalsIgnoreCase("Y")) {
-                return parseDateTime("새 종료 시간 (YYYY-MM-DD HH:MM): ");
-            } else if (c.equalsIgnoreCase("N")) {
-                return meeting.getEndTime();
-            } else { System.out.println("잘못된 입력입니다."); }
-        }
-    }
-
-    private void handleDeleteMeeting(Long projectId) {
-        System.out.println("---------- 회의록 삭제 ----------");
-        
         try {
-            List<Meeting> meetings = meetingService.getMeetingsByProject(projectId);
-            showMeetingList(meetings);
-
-            Long meetingId = InputUtil.getLong(scanner, "삭제할 회의록의 ID 번호");
-
             meetingService.deleteMeeting(meetingId, projectId);
-            System.out.println("회의록이 성공적으로 삭제되었습니다.");
-        } catch (InputUtil.CancelException e) {
-            System.out.println("\n[!] 회의록 삭제가 취소되었습니다.");
-        } catch (MeetingException e) {
-            printError(e);
+        } catch (Exception e) {
+            return "redirect:/projects/" + projectId + "/meetings?error=" + encode(e.getMessage());
         }
-
-        pause();
-
+        return "redirect:/projects/" + projectId + "/meetings";
     }
 
-    private void printError(Exception e) {
-        System.out.println("[오류] " + e.getMessage());
+    private Member getLoginMember(HttpSession session) {
+        return (Member) session.getAttribute("loginMember");
     }
 
-    private void pause() {
-        System.out.print("\n엔터키를 누르면 회의록 메뉴로 돌아갑니다.");
-        scanner.nextLine();
+    private boolean isTeamMember(Long projectId, Long memberId) {
+        String role = participantService.getMyRole(projectId, memberId);
+        return "LEADER".equals(role) || "MEMBER".equals(role);
     }
 
-    private void showMeetingList(List<Meeting> meetingList) {
-        System.out.println("---------- 회의록 목록 ----------");
-        if (meetingList == null || meetingList.isEmpty()) {
-            System.out.println("(등록된 회의록이 없습니다.)");
-            return;
-        }
-        
-        for (Meeting meeting : meetingList) {
-            System.out.println(meeting.getId() + ". " + meeting.getTitle());
-            String startTimeStr = (meeting.getStartTime() != null) ? meeting.getStartTime().format(formatter) : "N/A";
-            String endTimeStr = (meeting.getEndTime() != null) ? meeting.getEndTime().format(formatter) : "N/A";
-            System.out.println("   Time: " + startTimeStr + " ~ " + endTimeStr);
-            System.out.println("   Desc: " + (meeting.getDescription() != null ? meeting.getDescription() : ""));
-            System.out.println();
-        }
-    }
-
-    private LocalDateTime parseDateTime(String prompt) {
-        while (true) {
-            try {
-                String input = InputUtil.getInput(scanner, prompt);
-
-                if (input.trim().isEmpty()) {
-                    return null;
-                }
-                return LocalDateTime.parse(input, formatter);
-
-            } catch (DateTimeParseException e) {
-                System.out.println("오류: 날짜 형식이 잘못되었습니다. (YYYY-MM-DD HH:MM)");
-            }
-        }
+    private String encode(String text) {
+        return URLEncoder.encode(text, StandardCharsets.UTF_8);
     }
 }

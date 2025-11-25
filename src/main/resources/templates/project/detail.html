@@ -205,9 +205,12 @@
                 👥 함께하는 팀원
             </a>
 
-            <button class="btn btn-outline btn-block" style="color: #555; background: white; padding: 20px; font-size: 15px;">
+            <a th:href="@{|/projects/${project.id}/posts|}"
+               class="btn btn-outline btn-block"
+               style="color: #555; background: white; padding: 20px; font-size: 15px; display: block; text-decoration: none;">
                 📋 게시판
-            </button>
+            </a>
+
 
             <button class="btn btn-outline btn-block" style="color: #555; background: white; padding: 20px; font-size: 15px;">
                 🔗 링크 아카이브

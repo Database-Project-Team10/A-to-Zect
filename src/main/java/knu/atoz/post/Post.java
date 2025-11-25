@@ -1,7 +1,14 @@
 package knu.atoz.post;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
+@AllArgsConstructor
 public class Post {
     private final Long id;
     private final Long projectId;
@@ -12,26 +19,6 @@ public class Post {
     private final LocalDateTime createdAt;
     private final LocalDateTime modifiedAt;
 
-    public Post(Long id, Long projectId, Long memberId, String title, String content, LocalDateTime createdAt,  LocalDateTime modifiedAt) {
-        this.id = id;
-        this.projectId = projectId;
-        this.memberId = memberId;
-        this.title = title;
-        this.content = content;
-        this.createdAt = createdAt;
-        this.modifiedAt = modifiedAt;
-    }
-
-    public Post(Long id, Long projectId, Long memberId, String title, String content, LocalDateTime createdAt){
-        this.id = id;
-        this.projectId = projectId;
-        this.memberId = memberId;
-        this.title = title;
-        this.content = content;
-        this.createdAt = createdAt;
-        this.modifiedAt = LocalDateTime.now();
-    }
-
     public Post(Long projectId, Long memberId, String title, String content) {
         this.id = null;
         this.projectId = projectId;
@@ -41,34 +28,5 @@ public class Post {
         this.createdAt = LocalDateTime.now();
         this.modifiedAt = LocalDateTime.now();
     }
-
-    public Long getId() {
-        return id;
-    }
-
-    public Long getProjectId() {
-        return projectId;
-    }
-
-    public Long getMemberId() {
-        return memberId;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getModifiedAt() {
-        return modifiedAt;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
 
 }

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>글쓰기</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .btn-form-fixed {
+            height: 42px !important;
+            line-height: 40px !important;
+            padding: 0 25px !important;
+            font-size: 15px !important;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box !important;
+            text-decoration: none !important;
+            border-radius: 6px !important;
+            margin: 0 !important;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="container" style="max-width: 800px;">
+
+    <h1 th:text="${isNew} ? '🖊️ 게시글 작성' : '📝 게시글 수정'">글쓰기</h1>
+    <hr>
+
+    <form th:action="${isNew} ? @{|/projects/${project.id}/posts/new|} : @{|/projects/${project.id}/posts/${postId}/edit|}"
+          method="post" th:object="${postDto}">
+
+        <div>
+            <input type="text" th:field="*{title}" placeholder="제목을 입력하세요" required style="font-size: 16px; font-weight: bold;">
+        </div>
+        <div>
+            <textarea th:field="*{content}" placeholder="내용을 입력하세요" required style="height: 300px;"></textarea>
+        </div>
+
+        <div style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+            <a th:href="@{|/projects/${project.id}/posts|}"
+               class="btn btn-secondary btn-form-fixed">취소</a>
+
+            <button type="submit"
+                    class="btn btn-primary btn-form-fixed">저장</button>
+        </div>
+    </form>
+
+</div>
+</body>
+</html>

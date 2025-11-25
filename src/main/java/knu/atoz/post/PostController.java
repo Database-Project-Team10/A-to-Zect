@@ -1,230 +1,168 @@
 package knu.atoz.post;
 
+import jakarta.servlet.http.HttpSession;
+import knu.atoz.member.Member;
 import knu.atoz.member.MemberService;
+import knu.atoz.participant.ParticipantService;
 import knu.atoz.post.dto.PostRequestDto;
-import knu.atoz.post.exception.PostException;
-import knu.atoz.reply.ReplyController;
-import knu.atoz.utils.InputUtil;
+import knu.atoz.project.Project;
+import knu.atoz.project.ProjectService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Scanner;
 
+@Controller
+@RequestMapping("/projects/{projectId}/posts")
+@RequiredArgsConstructor
 public class PostController {
 
-    private final ReplyController replyController;
-    private final MemberService memberService;
-    private final Scanner scanner;
     private final PostService postService;
+    private final ProjectService projectService;
+    private final ParticipantService participantService;
+    private final MemberService memberService;
 
-    public PostController(
-            ReplyController replyController,
-            MemberService memberService,
-            Scanner scanner,
-            PostService postService
-    ) {
-        this.replyController = replyController;
-        this.memberService = memberService;
-        this.scanner = scanner;
-        this.postService = postService;
-    }
+    // 1. 게시글 목록
+    @GetMapping
+    public String listPosts(@PathVariable Long projectId, HttpSession session, Model model) {
+        Member loginMember = checkLogin(session);
+        if (loginMember == null) return "redirect:/members/login";
 
-    public void showPostMenu(Long projectId) {
-        while (true) {
-            printMenu(projectId);
-
-            if (!memberService.isLoggedIn()) {
-                System.out.println("로그인해야합니다.");
-                return;
-            }
-
-            String choice = scanner.nextLine();
-
-            try {
-                switch (choice) {
-                    case "1":
-                        handleViewAllPosts(projectId);
-                        break;
-
-                    case "2":
-                        handleViewMyPosts(projectId);
-                        break;
-
-                    case "3":
-                        handleCreatePost(projectId);
-                        break;
-
-                    case "4":
-                        handleUpdatePost(projectId);
-                        break;
-
-                    case "5":
-                        handleDeletePost(projectId);
-                        break;
-
-                    case "6":
-                        handleEnterPost(projectId);
-                        break;
-
-                    case "b":
-                        return;
-
-                    default:
-                        System.out.println("잘못된 입력입니다.");
-                }
-            } catch (PostException e) {
-                printError(e);
-            }
-        }
-    }
-
-    private void printMenu(Long projectId) {
-        System.out.println("\n---------- 게시물 기능 ----------");
-
-        System.out.println("현재 로그인: " + (memberService.isLoggedIn() ? memberService.getCurrentUser().getEmail() : "로그인 필요"));
-        System.out.println("현재 접속 중인 프로젝트: " + projectId);
-
-        System.out.println("1. 전체 게시물 보기");
-        System.out.println("2. 내가 작성한 게시물 보기");
-        System.out.println("3. 게시물 작성");
-        System.out.println("4. 게시물 수정");
-        System.out.println("5. 게시물 삭제");
-        System.out.println("6. 게시물 접속");
-        System.out.println("b. 뒤로 가기");
-        System.out.print("메뉴를 선택하세요: ");
-    }
-
-    private void handleViewAllPosts(Long projectId) {
-        List<Post> list = postService.getPostList(projectId);
-        printPostList(list);
-        pause();
-    }
-
-    private void handleViewMyPosts(Long projectId) {
-        Long memberId = memberService.getCurrentUser().getId();
-        List<Post> list = postService.getMyPostList(projectId, memberId);
-        printPostList(list);
-        pause();
-    }
-
-    private void handleCreatePost(Long projectId) {
-        System.out.println("---------- 게시물 작성 ----------");
-        try {
-            String title = InputUtil.getInput(scanner, "게시물 제목");
-            String content = InputUtil.getInput(scanner, "게시물 내용");
-
-            PostRequestDto postRequestDto = new PostRequestDto(title, content);
-
-            postService.createPost(projectId, memberService.getCurrentUser().getId(), postRequestDto);
-            System.out.println("게시물 생성 성공!");
-
-        } catch (InputUtil.CancelException e) {
-            System.out.println("\n[!] 게시물 작성이 취소되었습니다.");
+        if (!isTeamMember(projectId, loginMember.getId())) {
+            return "redirect:/projects/" + projectId + "?error=" + encode("팀원만 접근 가능합니다.");
         }
 
-        pause();
+        Project project = projectService.getProject(projectId);
+        List<Post> posts = postService.getPostList(projectId);
+
+        model.addAttribute("project", project);
+        model.addAttribute("posts", posts);
+
+        return "post/list";
     }
 
-    private void handleUpdatePost(Long projectId) {
-        Long memberId = memberService.getCurrentUser().getId();
+    // 2. 게시글 상세
+    @GetMapping("/{postId}")
+    public String viewPost(@PathVariable Long projectId,
+                           @PathVariable Long postId,
+                           HttpSession session,
+                           Model model) {
 
-        System.out.println("---------- 게시물 수정 ----------");
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) return "redirect:/members/login";
+
+        // 권한 체크 (팀원인지)
+        if (!isTeamMember(projectId, loginMember.getId())) {
+            return "redirect:/projects/" + projectId + "?error=" + encode("접근 권한이 없습니다.");
+        }
 
         try {
-            List<Post> myPosts = postService.getMyPostList(projectId, memberId);
-            printPostList(myPosts);
+            Post post = postService.getPost(postId);
+            Project project = projectService.getProject(projectId);
 
-            Long postId = InputUtil.getLong(scanner, "수정하고 싶은 게시물 번호");
+            model.addAttribute("post", post);
+            model.addAttribute("project", project);
+            model.addAttribute("loginMemberId", loginMember.getId());
 
-            Post myPost = postService.getPost(postId);
-            printPostDetail(myPost);
+            String authorName = memberService.getMemberName(post.getMemberId());
+            model.addAttribute("authorName", authorName);
 
-            String newTitle = askEditField("제목", myPost.getTitle());
-            String newContent = askEditField("내용", myPost.getContent());
+            return "post/detail";
 
-            PostRequestDto postRequestDto = new PostRequestDto(newTitle, newContent);
-
-            postService.updatePost(projectId, myPost.getId(), memberId, postRequestDto);
-            System.out.println("게시물 수정 성공!");
-
-        } catch (InputUtil.CancelException e) {
-            System.out.println("\n[!] 게시물 수정이 취소되었습니다.");
+        } catch (Exception e) {
+            return "redirect:/projects/" + projectId + "/posts?error=" + encode(e.getMessage());
         }
-        pause();
     }
 
-    private void handleDeletePost(Long projectId) {
-        Long memberId = memberService.getCurrentUser().getId();
+    // 3. 글쓰기 폼
+    @GetMapping("/new")
+    public String createForm(@PathVariable Long projectId, HttpSession session, Model model) {
+        if (checkLogin(session) == null) return "redirect:/members/login";
 
-        System.out.println("---------- 게시물 삭제 ----------");
+        model.addAttribute("project", projectService.getProject(projectId));
+        model.addAttribute("postDto", new PostRequestDto());
+        model.addAttribute("isNew", true);
+        return "post/form";
+    }
+
+    // 4. 글쓰기 처리
+    @PostMapping("/new")
+    public String createPost(@PathVariable Long projectId, @ModelAttribute PostRequestDto dto, HttpSession session) {
+        Member loginMember = checkLogin(session);
+        if (loginMember == null) return "redirect:/members/login";
+
         try {
-            List<Post> myPosts = postService.getMyPostList(projectId, memberId);
-            printPostList(myPosts);
-
-            Long postId = InputUtil.getLong(scanner, "삭제할 게시물 번호");
-
-            postService.deletePost(postId, memberId);
-            System.out.println("게시물 삭제 성공!");
-
-        } catch (InputUtil.CancelException e) {
-            System.out.println("\n[!] 게시물 삭제가 취소되었습니다.");
+            postService.createPost(projectId, loginMember.getId(), dto);
+            return "redirect:/projects/" + projectId + "/posts";
+        } catch (Exception e) {
+            return "redirect:/projects/" + projectId + "/posts/new?error=" + encode(e.getMessage());
         }
-        pause();
     }
 
-    private void handleEnterPost(Long projectId) {
+    // 5. 수정 폼
+    @GetMapping("/{postId}/edit")
+    public String editForm(@PathVariable Long projectId, @PathVariable Long postId, HttpSession session, Model model) {
+        Member loginMember = checkLogin(session);
+        if (loginMember == null) return "redirect:/members/login";
+
+        Post post = postService.getPost(postId);
+        if (!post.getMemberId().equals(loginMember.getId())) {
+            return "redirect:/projects/" + projectId + "/posts/" + postId + "?error=" + encode("수정 권한이 없습니다.");
+        }
+
+        PostRequestDto dto = new PostRequestDto(post.getTitle(), post.getContent());
+        model.addAttribute("project", projectService.getProject(projectId));
+        model.addAttribute("postDto", dto);
+        model.addAttribute("postId", postId); // 수정 시 ID 필요
+        model.addAttribute("isNew", false);
+
+        return "post/form";
+    }
+
+    // 6. 수정 처리
+    @PostMapping("/{postId}/edit")
+    public String updatePost(@PathVariable Long projectId, @PathVariable Long postId,
+                             @ModelAttribute PostRequestDto dto, HttpSession session) {
+        Member loginMember = checkLogin(session);
+        if (loginMember == null) return "redirect:/members/login";
+
         try {
-            printPostList(postService.getPostList(projectId));
-
-            Long postId = InputUtil.getLong(scanner, "접속할 게시물의 번호");
-
-            Post post = postService.getPostInProject(projectId, postId);
-            printPostDetail(post);
-
-            replyController.showReplyMenu(postId);
-
-        } catch (InputUtil.CancelException e) {
-            System.out.println("\n[!] 게시물 접속이 취소되었습니다.");
+            postService.updatePost(postId, loginMember.getId(), dto);
+            return "redirect:/projects/" + projectId + "/posts/" + postId;
+        } catch (Exception e) {
+            return "redirect:/projects/" + projectId + "/posts/" + postId + "/edit?error=" + encode(e.getMessage());
         }
     }
 
-    private String askEditField(String fieldName, String originalValue) {
-        while (true) {
-            String prompt = String.format("%s을 수정하시겠습니까? (Y/N)", fieldName);
-            String c = InputUtil.getInput(scanner, prompt);
+    // 7. 삭제 처리
+    @PostMapping("/{postId}/delete")
+    public String deletePost(@PathVariable Long projectId, @PathVariable Long postId, HttpSession session) {
+        Member loginMember = checkLogin(session);
+        if (loginMember == null) return "redirect:/members/login";
 
-            if (c.equals("Y")) {
-                return InputUtil.getInput(scanner, "수정할 " + fieldName + " 입력");
-            } else if (c.equals("N")) {
-                return originalValue;
-            } else {
-                System.out.println("잘못된 입력입니다.");
-            }
+        try {
+            postService.deletePost(postId, loginMember.getId());
+            return "redirect:/projects/" + projectId + "/posts";
+        } catch (Exception e) {
+            return "redirect:/projects/" + projectId + "/posts/" + postId + "?error=" + encode(e.getMessage());
         }
     }
 
-    private void printPostDetail(Post post) {
-        System.out.println("---------- 게시물 번호 " + post.getId() + " ----------");
-        System.out.println("게시물 제목: " + post.getTitle());
-        System.out.println("게시물 내용");
-        System.out.println(post.getContent());
-        System.out.println();
+    // --- Helpers ---
+    private Member checkLogin(HttpSession session) {
+        return (Member) session.getAttribute("loginMember");
     }
 
-    private void printPostList(List<Post> postList) {
-        System.out.println("---------- 게시물 목록 ----------");
-        for (Post post : postList) {
-            System.out.println(post.getId() + ". " + post.getTitle());
-            System.out.println("게시물 내용: " + post.getContent());
-            System.out.println();
-        }
+    private boolean isTeamMember(Long projectId, Long memberId) {
+        String role = participantService.getMyRole(projectId, memberId);
+        return "LEADER".equals(role) || "MEMBER".equals(role);
     }
 
-    private void printError(Exception e) {
-        System.out.println("[오류] " + e.getMessage());
-    }
-
-    private void pause() {
-        System.out.print("\n엔터키를 누르면 게시물 기능으로 돌아갑니다.");
-        scanner.nextLine();
+    private String encode(String text) {
+        return URLEncoder.encode(text, StandardCharsets.UTF_8);
     }
 }

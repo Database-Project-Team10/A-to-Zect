@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>게시판</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        /* 게시글 카드 리스트 스타일 */
+        .post-card {
+            display: block; /* a 태그를 박스처럼 사용 */
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            text-decoration: none; /* 링크 밑줄 제거 */
+            color: inherit;
+            transition: all 0.2s ease-in-out;
+            position: relative;
+        }
+
+        .post-card:hover {
+            transform: translateY(-3px); /* 살짝 위로 뜸 */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-color: #007bff;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .post-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 아이콘 스타일 */
+        .post-icon {
+            background-color: #f1f3f5;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .post-meta {
+            font-size: 13px;
+            color: #888;
+            display: flex;
+            gap: 15px;
+            margin-left: 40px; /* 아이콘 너비만큼 들여쓰기 */
+        }
+
+        .arrow-icon {
+            color: #ccc;
+            font-weight: bold;
+        }
+        .post-card:hover .arrow-icon {
+            color: #007bff; /* 호버 시 화살표 색상 변경 */
+        }
+    </style>
+</head>
+<body>
+<div class="container" style="max-width: 800px;">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>📋 프로젝트 게시판</h1>
+        <a th:href="@{/projects/{id}(id=${project.id})}" class="btn btn-outline">← 상세로</a>
+    </div>
+
+    <p class="subtitle">
+        <strong th:text="${project.title}">프로젝트명</strong>의 공지사항과 이슈를 공유합니다.
+    </p>
+    <hr>
+
+    <div style="text-align: right; margin-bottom: 20px;">
+        <a th:href="@{|/projects/${project.id}/posts/new|}" class="btn btn-primary">
+            🖊️ 새 글 작성
+        </a>
+    </div>
+
+    <div>
+        <div th:if="${posts.isEmpty()}" class="empty-message">
+            등록된 게시글이 없습니다.
+        </div>
+
+        <a th:each="post : ${posts}"
+           th:href="@{|/projects/${project.id}/posts/${post.id}|}"
+           class="post-card">
+
+            <div class="post-header">
+                <div class="post-title">
+                    <span class="post-icon">📝</span>
+                    <span th:text="${post.title}">게시글 제목</span>
+                </div>
+                <span class="arrow-icon">→</span>
+            </div>
+
+            <div class="post-meta">
+                <span>수정일: <span th:text="${#temporals.format(post.modifiedAt, 'yyyy-MM-dd HH:mm')}">2025-01-01</span></span>
+            </div>
+        </a>
+    </div>
+
+</div>
+</body>
+</html>

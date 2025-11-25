@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>게시글 보기</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        /* 게시글 상세 전용 스타일 */
+        .post-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .post-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin: 0 0 10px 0;
+        }
+        .post-meta {
+            font-size: 13px;
+            color: #888;
+            display: flex;
+            justify-content: space-between;
+        }
+        .post-content {
+            min-height: 300px;
+            background: #fff;
+            padding: 30px;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            line-height: 1.8;
+            white-space: pre-wrap; /* 줄바꿈 유지 */
+            color: #444;
+            font-size: 15px;
+        }
+        .btn-container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .author-actions {
+            display: flex;
+            gap: 8px; /* 버튼 사이 간격 */
+        }
+
+        /* [추가] 버튼 크기 강제 통일 */
+        .btn-fixed {
+            height: 38px !important;        /* 높이 고정 */
+            line-height: 36px !important;   /* 텍스트 수직 정렬 (border 고려 -2px) */
+            padding: 0 18px !important;     /* 좌우 여백 */
+            font-size: 14px !important;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+            text-decoration: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" style="max-width: 800px;">
+
+    <div class="post-header">
+        <h1 class="post-title" th:text="${post.title}">게시글 제목</h1>
+        <div class="post-meta">
+            <span>
+                작성자: <strong style="color: #333;" th:text="${authorName}">홍길동</strong>
+            </span>
+
+            <span th:text="|수정일: ${#temporals.format(post.modifiedAt, 'yyyy-MM-dd HH:mm')}|">
+                수정일: 2025-11-25 19:21
+            </span>
+        </div>
+    </div>
+
+    <div class="post-content" th:text="${post.content}">
+        내용이 들어갑니다...
+    </div>
+
+    <div class="btn-container">
+        <a th:href="@{|/projects/${project.id}/posts|}" class="btn btn-secondary btn-fixed">목록으로</a>
+
+        <div class="author-actions" th:if="${post.memberId == loginMemberId}">
+
+            <a th:href="@{|/projects/${project.id}/posts/${post.id}/edit|}"
+               class="btn btn-outline btn-fixed">수정</a>
+
+            <form th:action="@{|/projects/${project.id}/posts/${post.id}/delete|}" method="post" style="margin:0;">
+                <button type="submit" class="btn btn-danger btn-fixed"
+                        onclick="return confirm('정말 삭제하시겠습니까?');">
+                    삭제
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -29,12 +29,11 @@ public class DocumentController {
     public String listDocuments(@PathVariable Long projectId,
                                 HttpSession session,
                                 Model model) {
-        Member loginMember = (Member) session.getAttribute("loginMember");
+        Member loginMember = getLoginMember(session);
         if (loginMember == null) return "redirect:/members/login";
 
         // 권한 체크: 팀원(LEADER, MEMBER)만 접근 가능
-        String myRole = participantService.getMyRole(projectId, loginMember.getId());
-        if (myRole == null || "PENDING".equals(myRole)) {
+        if (!isTeamMember(projectId, loginMember.getId())) {
             return "redirect:/projects/" + projectId + "?error=" + encode("접근 권한이 없습니다.");
         }
 
@@ -45,7 +44,7 @@ public class DocumentController {
             model.addAttribute("project", project);
             model.addAttribute("documents", documents);
 
-            return "document/list"; // templates/document/list.html
+            return "document/list";
 
         } catch (Exception e) {
             return "redirect:/projects/" + projectId + "?error=" + encode(e.getMessage());
@@ -57,16 +56,20 @@ public class DocumentController {
     public String showCreateForm(@PathVariable Long projectId,
                                  HttpSession session,
                                  Model model) {
-        Member loginMember = (Member) session.getAttribute("loginMember");
+        Member loginMember = getLoginMember(session);
         if (loginMember == null) return "redirect:/members/login";
+
+        if (!isTeamMember(projectId, loginMember.getId())) {
+            return "redirect:/projects/" + projectId + "/documents?error=" + encode("문서 등록 권한이 없습니다.");
+        }
 
         Project project = projectService.getProject(projectId);
 
         model.addAttribute("project", project);
-        model.addAttribute("documentDto", new DocumentRequestDto());
-        model.addAttribute("isNew", true); // 화면 타이틀 제어용
+        model.addAttribute("documentDto", new DocumentRequestDto()); // 빈 객체 전달
+        model.addAttribute("isNew", true);
 
-        return "document/form"; // templates/document/form.html
+        return "document/form";
     }
 
     // 3. 문서 등록 처리 (POST)
@@ -75,13 +78,14 @@ public class DocumentController {
                                  @ModelAttribute DocumentRequestDto dto,
                                  HttpSession session,
                                  Model model) {
-        Member loginMember = (Member) session.getAttribute("loginMember");
+        Member loginMember = getLoginMember(session);
         if (loginMember == null) return "redirect:/members/login";
 
         try {
             documentService.createDocument(projectId, dto);
             return "redirect:/projects/" + projectId + "/documents";
         } catch (Exception e) {
+            // 실패 시 입력폼으로 돌아감
             model.addAttribute("error", e.getMessage());
             model.addAttribute("project", projectService.getProject(projectId));
             model.addAttribute("documentDto", dto);
@@ -96,19 +100,26 @@ public class DocumentController {
                                @PathVariable Long docId,
                                HttpSession session,
                                Model model) {
-        Member loginMember = (Member) session.getAttribute("loginMember");
+        Member loginMember = getLoginMember(session);
         if (loginMember == null) return "redirect:/members/login";
+
+        if (!isTeamMember(projectId, loginMember.getId())) {
+            return "redirect:/projects/" + projectId + "/documents?error=" + encode("문서 수정 권한이 없습니다.");
+        }
 
         try {
             Project project = projectService.getProject(projectId);
             Document document = documentService.getDocument(docId);
 
-            // 기존 값 채우기
-            DocumentRequestDto dto = new DocumentRequestDto(document.getTitle(), document.getLocation());
+            // [수정 포인트] DTO 생성 시 파일은 비워두고 제목만 채웁니다.
+            // (MultipartFile은 자바에서 임의로 생성해서 넣을 수 없음)
+            DocumentRequestDto dto = new DocumentRequestDto();
+            dto.setTitle(document.getTitle());
+            // dto.setFile(...) -> 불가능, 사용자가 직접 다시 올려야 함
 
             model.addAttribute("project", project);
-            model.addAttribute("document", document); // ID 등 참조용
-            model.addAttribute("documentDto", dto);
+            model.addAttribute("document", document); // 기존 파일 경로 표시용
+            model.addAttribute("documentDto", dto);   // 폼 바인딩용
             model.addAttribute("isNew", false);
 
             return "document/form";
@@ -125,7 +136,7 @@ public class DocumentController {
                                  @ModelAttribute DocumentRequestDto dto,
                                  HttpSession session,
                                  Model model) {
-        Member loginMember = (Member) session.getAttribute("loginMember");
+        Member loginMember = getLoginMember(session);
         if (loginMember == null) return "redirect:/members/login";
 
         try {
@@ -134,7 +145,8 @@ public class DocumentController {
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("project", projectService.getProject(projectId));
-            // 에러 발생 시 기존 document 정보 다시 조회해서 넣어줘야 함 (ID 유지를 위해)
+
+            // 에러 발생 시 기존 문서 정보 다시 로드 (화면 표시용)
             try {
                 model.addAttribute("document", documentService.getDocument(docId));
             } catch (Exception ignored) {}
@@ -150,8 +162,12 @@ public class DocumentController {
     public String deleteDocument(@PathVariable Long projectId,
                                  @PathVariable Long docId,
                                  HttpSession session) {
-        Member loginMember = (Member) session.getAttribute("loginMember");
+        Member loginMember = getLoginMember(session);
         if (loginMember == null) return "redirect:/members/login";
+
+        if (!isTeamMember(projectId, loginMember.getId())) {
+            return "redirect:/projects/" + projectId + "/documents?error=" + encode("문서 삭제 권한이 없습니다.");
+        }
 
         try {
             documentService.deleteDocument(docId, projectId);
@@ -159,6 +175,17 @@ public class DocumentController {
             return "redirect:/projects/" + projectId + "/documents?error=" + encode(e.getMessage());
         }
         return "redirect:/projects/" + projectId + "/documents";
+    }
+
+    // --- Helper Methods ---
+
+    private Member getLoginMember(HttpSession session) {
+        return (Member) session.getAttribute("loginMember");
+    }
+
+    private boolean isTeamMember(Long projectId, Long memberId) {
+        String role = participantService.getMyRole(projectId, memberId);
+        return "LEADER".equals(role) || "MEMBER".equals(role);
     }
 
     private String encode(String text) {

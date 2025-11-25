@@ -5,52 +5,28 @@
     <title>문서 아카이브</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <style>
-        .doc-card {
-            background: white;
-            border: 1px solid #eee;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: 0.2s;
-        }
-        .doc-card:hover {
-            border-color: #007bff;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transform: translateY(-2px);
-        }
-        .doc-content {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .doc-icon {
-            font-size: 24px;
-            background: #eef2ff;
-            width: 50px;
-            height: 50px;
-            display: flex;
+        /* 기존 스타일 유지 */
+        .doc-card { background: white; border: 1px solid #eee; border-radius: 10px; padding: 15px 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .doc-card:hover { border-color: #007bff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .doc-icon { font-size: 20px; margin-right: 10px; }
+        .doc-info { display: flex; align-items: center; }
+        .doc-title { font-weight: bold; color: #333; text-decoration: none; font-size: 16px; display: block; }
+
+        /* 파일명 스타일 */
+        .doc-filename { font-size: 12px; color: #888; margin-top: 4px; display: block; }
+
+        /* 버튼 높이 강제 통일 (수정/삭제 버튼 크기 다름 해결) */
+        .btn-group { display: flex; gap: 5px; align-items: center; }
+        .btn-sm-fixed {
+            height: 32px !important;
+            line-height: 30px !important; /* border 고려해서 2px 뺌 */
+            padding: 0 12px !important;
+            font-size: 12px !important;
+            display: inline-flex !important;
             align-items: center;
             justify-content: center;
-            border-radius: 10px;
-            color: #4f46e5;
+            box-sizing: border-box !important;
         }
-        .doc-title {
-            font-weight: bold;
-            color: #333;
-            text-decoration: none;
-            font-size: 16px;
-            display: block;
-        }
-        .doc-link {
-            font-size: 13px;
-            color: #888;
-            margin-top: 4px;
-            display: block;
-        }
-        .btn-group { display: flex; gap: 8px; }
     </style>
 </head>
 <body>
@@ -69,7 +45,7 @@
 
     <div th:if="${param.error}" class="error-msg" th:text="${param.error}"></div>
 
-    <div style="text-align: right; margin-bottom: 20px;">
+    <div style="text-align: right; margin-bottom: 15px;">
         <a th:href="@{|/projects/${project.id}/documents/new|}" class="btn btn-primary">
             📄 새 문서 등록
         </a>
@@ -81,23 +57,27 @@
 
     <div th:each="doc : ${documents}" class="doc-card">
 
-        <div class="doc-content">
-            <div class="doc-icon">📑</div>
+        <div class="doc-info">
+            <div class="doc-icon">💾</div>
             <div>
                 <a th:href="${doc.location}" target="_blank" class="doc-title" th:text="${doc.title}">
-                    기획서 v1.0
+                    문서 제목
                 </a>
-                <span class="doc-link" th:text="${doc.location}">https://...</span>
+
+                <span class="doc-filename">
+                    📎 <span th:text="${#strings.substringAfter(doc.location.substring(doc.location.lastIndexOf('/') + 1), '_')}">
+                        파일명.pdf
+                    </span>
+                </span>
             </div>
         </div>
 
         <div class="btn-group">
             <a th:href="@{|/projects/${project.id}/documents/${doc.id}/edit|}"
-               class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;">수정</a>
+               class="btn btn-outline btn-sm-fixed">수정</a>
 
-            <form th:action="@{|/projects/${project.id}/documents/${doc.id}/delete|}" method="post">
-                <button type="submit" class="btn btn-danger"
-                        style="padding: 6px 12px; font-size: 13px;"
+            <form th:action="@{|/projects/${project.id}/documents/${doc.id}/delete|}" method="post" style="margin:0;">
+                <button type="submit" class="btn btn-danger btn-sm-fixed"
                         onclick="return confirm('정말 삭제하시겠습니까?');">삭제</button>
             </form>
         </div>

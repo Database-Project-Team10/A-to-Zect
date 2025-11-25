@@ -19,7 +19,9 @@
     <div th:if="${error}" class="error-msg" th:text="${error}"></div>
 
     <form th:action="${isNew} ? @{|/projects/${project.id}/documents/new|} : @{|/projects/${project.id}/documents/${document.id}/edit|}"
-          method="post" th:object="${documentDto}">
+          method="post"
+          th:object="${documentDto}"
+          enctype="multipart/form-data">
 
         <div>
             <label>문서 제목</label>
@@ -27,14 +29,30 @@
         </div>
 
         <div>
-            <label>문서 링크 (URL)</label>
-            <input type="text" th:field="*{location}" placeholder="예: https://google.drive/..." required>
-            <p style="font-size: 12px; color: #888; margin-top: -10px;">* 클릭 시 이동할 외부 링크 주소나 파일 경로를 입력하세요.</p>
+            <label>파일 첨부</label>
+
+            <input type="file" th:field="*{file}" th:required="${isNew}">
+
+            <p style="font-size: 12px; color: #888; margin-top: 5px;">
+                * PDF, Word, Excel, 이미지 등 파일을 업로드하세요.
+            </p>
+
+            <div th:if="${!isNew}" style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px dashed #ccc;">
+                <p style="margin: 0; font-size: 14px; color: #333; font-weight: bold;">📂 현재 저장된 파일</p>
+                <div style="margin-top: 5px;">
+                    <a th:href="${document.location}" target="_blank" style="font-size: 13px; color: #007bff; text-decoration: underline;">
+                        [기존 파일 확인하기]
+                    </a>
+                </div>
+                <p style="margin-top: 5px; font-size: 12px; color: #666;">
+                    ※ 새 파일을 선택하지 않으면 기존 파일이 유지됩니다.
+                </p>
+            </div>
         </div>
 
         <div style="margin-top: 30px;">
             <button type="submit" class="btn btn-primary btn-block">
-                <span th:text="${isNew} ? '등록하기' : '수정 완료'"></span>
+                <span th:text="${isNew} ? '업로드 및 등록' : '수정 완료'"></span>
             </button>
         </div>
     </form>

@@ -9,6 +9,7 @@ import knu.atoz.project.dto.ProjectCreateRequestDto;
 import knu.atoz.project.dto.ProjectUpdateRequestDto;
 import knu.atoz.project.exception.ProjectException;
 import knu.atoz.techspec.Techspec;
+import knu.atoz.techspec.exception.TechspecException;
 import knu.atoz.techspec.project.ProjectTechspecService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -64,15 +65,12 @@ public class ProjectController {
         }
 
         try {
-            
             dto.setMemberId(loginMember.getId());
-
-            
             projectService.createProject(dto);
 
             return "redirect:/"; 
 
-        } catch (ProjectException e) {
+        } catch (ProjectException | TechspecException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("projectDto", dto); 
             return "project/create";

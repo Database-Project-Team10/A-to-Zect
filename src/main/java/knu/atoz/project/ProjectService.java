@@ -11,6 +11,7 @@ import knu.atoz.project.exception.ProjectTitleInvalidException;
 import knu.atoz.project.exception.UnauthorizedProjectAccessException;
 import knu.atoz.techspec.Techspec;
 import knu.atoz.techspec.TechspecRepository;
+import knu.atoz.techspec.exception.TechspecInvalidException;
 import knu.atoz.techspec.project.ProjectTechspecRepository;
 import knu.atoz.utils.Azconnection;
 import org.springframework.stereotype.Service;
@@ -95,7 +96,7 @@ public class ProjectService {
             participantRepository.saveLeader(conn, requestDto.getMemberId(), newProject.getId());
 
             
-            if (!requestDto.getTechSpecs().isEmpty()) {
+            if (requestDto.getTechSpecs() != null) {
                 
                 for (String techName : requestDto.getTechSpecs()) {
                     Techspec techspec = techspecRepository.findTechspecIdByName(techName);
@@ -108,6 +109,8 @@ public class ProjectService {
                     }
                     projectTechspecRepository.addProjectTechspec(conn, newProject.getId(), techspecId);
                 }
+            } else {
+                throw new TechspecInvalidException("테크스펙은 비어있을 수 없습니다.");
             }
 
             

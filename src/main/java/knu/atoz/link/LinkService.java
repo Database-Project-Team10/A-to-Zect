@@ -1,5 +1,7 @@
 package knu.atoz.link;
 
+import org.springframework.stereotype.Service;
+
 import knu.atoz.link.dto.LinkRequestDto;
 import knu.atoz.link.exception.InvalidLinkInputException;
 import knu.atoz.link.exception.LinkAccessException;
@@ -7,6 +9,7 @@ import knu.atoz.link.exception.LinkNotFoundException;
 
 import java.util.List;
 
+@Service
 public class LinkService {
 
     private final LinkRepository linkRepository;

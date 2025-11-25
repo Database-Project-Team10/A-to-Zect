@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>링크 아카이브</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        /* Document 리스트와 동일한 카드 스타일 적용 */
+        .link-card { background: white; border: 1px solid #eee; border-radius: 10px; padding: 15px 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .link-card:hover { border-color: #007bff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .link-icon { font-size: 20px; margin-right: 15px; }
+        .link-info { display: flex; align-items: center; overflow: hidden; }
+        .link-text-group { display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* 제목 스타일 */
+        .link-title { font-weight: bold; color: #333; text-decoration: none; font-size: 16px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .link-title:hover { color: #007bff; text-decoration: underline; }
+
+        /* URL 표시 스타일 (회색, 작게) */
+        .link-url { font-size: 12px; color: #888; margin-top: 4px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 400px; }
+
+        /* 버튼 그룹 스타일 통일 */
+        .btn-group { display: flex; gap: 5px; align-items: center; min-width: 150px; justify-content: flex-end; }
+
+        .btn-sm-fixed {
+            height: 32px !important;
+            line-height: 30px !important;
+            padding: 0 12px !important;
+            font-size: 12px !important;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box !important;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" style="max-width: 800px;">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>🔗 링크 아카이브</h1>
+        <a th:href="@{/projects/{id}(id=${project.id})}" class="btn btn-outline">← 상세로</a>
+    </div>
+
+    <p class="subtitle">
+        <strong th:text="${project.title}">프로젝트명</strong>의 유용한 참고 자료를 공유합니다.
+    </p>
+    <hr>
+
+    <div th:if="${param.error}" class="error-msg" th:text="${param.error}"></div>
+
+    <div style="text-align: right; margin-bottom: 15px;">
+        <a th:href="@{|/projects/${project.id}/links/new|}" class="btn btn-primary">
+            🔗 새 링크 등록
+        </a>
+    </div>
+
+    <div th:if="${links == null || links.isEmpty()}" class="empty-message">
+        등록된 링크가 없습니다.
+    </div>
+
+    <div th:each="link : ${links}" class="link-card">
+
+        <div class="link-info">
+            <div class="link-icon">🌐</div>
+            <div class="link-text-group">
+                <a th:href="${link.url}" target="_blank" class="link-title" th:text="${link.title}">
+                    링크 제목
+                </a>
+
+                <span class="link-url" th:text="${link.url}">
+                    https://www.example.com
+                </span>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <a th:href="${link.url}" target="_blank" class="btn btn-outline btn-sm-fixed" title="새 탭에서 열기">
+                이동 ↗
+            </a>
+
+            <a th:href="@{|/projects/${project.id}/links/${link.id}/edit|}"
+               class="btn btn-outline btn-sm-fixed">수정</a>
+
+            <form th:action="@{|/projects/${project.id}/links/${link.id}/delete|}" method="post" style="margin:0;">
+                <button type="submit" class="btn btn-danger btn-sm-fixed"
+                        onclick="return confirm('정말 삭제하시겠습니까?');">삭제</button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

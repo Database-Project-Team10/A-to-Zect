@@ -1,14 +1,16 @@
 package knu.atoz.link;
 
+import org.springframework.stereotype.Repository;
+
 import knu.atoz.utils.Azconnection;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@Repository
 public class LinkRepository {
 
-    
      //(C) Create: 새로운 Link 레코드를 DB에 저장합니다.
      public Link save(Link link) {
          String sql = "INSERT INTO link (project_id, title, url) VALUES (?, ?, ?)";

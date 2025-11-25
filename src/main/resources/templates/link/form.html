@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${isNew} ? '새 링크 등록' : '링크 수정'">링크 관리</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div class="container" style="max-width: 600px;">
+
+    <h1 th:text="${isNew} ? '🔗 새 링크 등록' : '🔗 링크 수정'">제목</h1>
+
+    <div class="text-right">
+        <a th:href="@{|/projects/${project.id}/links|}" class="btn btn-secondary">목록으로</a>
+    </div>
+    <hr>
+
+    <div th:if="${error}" class="error-msg" th:text="${error}"></div>
+
+    <form th:action="${isNew} ? @{|/projects/${project.id}/links/new|} : @{|/projects/${project.id}/links/${link.id}/edit|}"
+          method="post"
+          th:object="${linkDto}">
+
+        <div>
+            <label for="title">링크 제목</label>
+            <input type="text" id="title" th:field="*{title}" placeholder="예: Spring Boot 공식 문서" required>
+        </div>
+
+        <div>
+            <label for="url">URL 주소</label>
+            <input type="text" id="url" th:field="*{url}" placeholder="https://..." required>
+            
+            <p style="font-size: 12px; color: #888; margin-top: 5px;">
+                * 반드시 <code>http://</code> 또는 <code>https://</code> 로 시작해야 합니다.
+            </p>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button type="submit" class="btn btn-primary btn-block">
+                <span th:text="${isNew} ? '등록하기' : '수정 완료'"></span>
+            </button>
+        </div>
+    </form>
+
+</div>
+
+</body>
+</html>

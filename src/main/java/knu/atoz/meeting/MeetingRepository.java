@@ -1,6 +1,7 @@
 package knu.atoz.meeting;
 
 import knu.atoz.utils.Azconnection;
+import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.sql.Types;
 import java.util.List;
 
+@Repository
 public class MeetingRepository {
 
 	public Meeting save(Meeting meeting) {

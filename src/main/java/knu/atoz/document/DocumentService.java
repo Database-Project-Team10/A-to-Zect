@@ -4,9 +4,11 @@ import knu.atoz.document.dto.DocumentRequestDto;
 import knu.atoz.document.exception.DocumentAccessException;
 import knu.atoz.document.exception.DocumentNotFoundException;
 import knu.atoz.document.exception.InvalidDocumentInputException;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class DocumentService {
 
     private final DocumentRepository documentRepository;

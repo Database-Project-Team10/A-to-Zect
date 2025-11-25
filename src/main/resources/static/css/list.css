@@ -1,0 +1,99 @@
+/* src/main/resources/static/css/list.css */
+
+body {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+}
+
+.main-container {
+    padding-top: 30px;
+}
+
+/* --- 상단 제목 및 뒤로가기 스타일 --- */
+.list-header {
+    margin-top: 0;
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+/* 💡 추가된 부분: list-header 내 h3 (또는 h2)에 대해 굵기 강제 적용 */
+.list-header h3, .list-header h2 {
+    font-weight: 900 !important; /* 가장 굵게 (Extra Bold) 강제 적용 */
+    font-size: 1.5rem; /* 사이즈 조정 */
+    color: #343a40;
+}
+
+/* 뒤로가기 버튼: 텍스트 링크 스타일 */
+.btn-link {
+    font-weight: 600;
+    padding: 0;
+}
+.btn-link:hover {
+    text-decoration: underline;
+}
+
+/* --- 문서 카드 스타일 --- */
+.document-card {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    margin-bottom: 12px;
+    padding: 15px 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.document-card:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* 텍스트 스타일 */
+.document-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #495057;
+}
+
+.text-muted-location {
+    font-size: 0.85rem;
+    color: #868e96 !important;
+}
+
+/* --- 액션 버튼 그룹 --- */
+.document-actions {
+    min-width: 140px;
+    padding-left: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    align-items: center;
+}
+
+/* --- 수정 버튼 (테두리 파란색) --- */
+.btn-action-edit {
+    color: #007bff;
+    background-color: transparent;
+    border: 1px solid #007bff;
+    font-weight: 600;
+}
+.btn-action-edit:hover {
+    color: #ffffff;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+/* --- 삭제 버튼 (테두리 보라색) --- */
+.btn-action-delete {
+    color: #6f42c1;
+    background-color: transparent;
+    border: 1px solid #6f42c1;
+    font-weight: 600;
+}
+.btn-action-delete:hover {
+    color: #ffffff;
+    background-color: #6f42c1;
+    border-color: #6f42c1;
+}

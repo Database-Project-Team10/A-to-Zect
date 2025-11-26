@@ -1,19 +1,31 @@
 package knu.atoz.member;
 
-import knu.atoz.member.dto.*;
-import knu.atoz.member.exception.*;
+import knu.atoz.member.dto.MemberInfoResponseDto;
+import knu.atoz.member.dto.MemberUpdateRequestDto;
+import knu.atoz.member.dto.PasswordUpdateRequestDto;
+import knu.atoz.member.dto.SignupRequestDto;
+import knu.atoz.member.exception.DuplicateEmailException;
+import knu.atoz.member.exception.InvalidCredentialsException;
+import knu.atoz.member.exception.MemberNotFoundException;
+import knu.atoz.member.exception.PasswordMismatchException;
+import knu.atoz.participant.Participant;
+import knu.atoz.participant.ParticipantRepository;
+import knu.atoz.project.ProjectService;
 import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class MemberService {
 
+    private final ProjectService projectService;
     private final MemberRepository memberRepository;
+    private final ParticipantRepository participantRepository;
 
     public Member signUp(SignupRequestDto signupRequestDto) {
 
@@ -121,6 +133,13 @@ public class MemberService {
         if (member == null) {
             throw new MemberNotFoundException();
         }
+
+        List<Participant> leaderParticipations = participantRepository.findAllByMemberIdAndRole(memberId, "LEADER");
+
+        for (Participant p : leaderParticipations) {
+            projectService.deleteProject(p.getProjectId(), memberId);
+        }
+
         memberRepository.delete(memberId);
     }
 }

@@ -16,7 +16,7 @@ public class Azconnection {
 
             // 2. 환경 변수가 없으면 로컬 설정 사용 (IntelliJ 실행용)
             if (dbUrl == null || dbUrl.isEmpty()) {
-                dbUrl = "jdbc:oracle:thin:@localhost:1521:xe"; // 또는 1522 등 본인 로컬 설정
+                dbUrl = "jdbc:oracle:thin:@localhost:1521:free"; // 또는 1522 등 본인 로컬 설정
                 dbUser = "az";       // 로컬 아이디
                 dbPassword = "dtob"; // 로컬 비번
             }

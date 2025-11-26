@@ -222,4 +222,30 @@ public class ParticipantRepository {
             if (affected == 0) { }
         }
     }
+
+    public List<Participant> findAllByMemberIdAndRole(Long memberId, String role) {
+        List<Participant> participants = new ArrayList<>();
+        String sql = "SELECT member_id, project_id, role FROM Participant WHERE member_id = ? AND role = ?";
+
+        try (Connection conn = Azconnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setLong(1, memberId);
+            pstmt.setString(2, role);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Participant participant = new Participant(
+                            rs.getLong("member_id"),
+                            rs.getLong("project_id"),
+                            rs.getString("role")
+                    );
+                    participants.add(participant);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return participants;
+    }
 }

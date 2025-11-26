@@ -131,6 +131,13 @@ public class ProjectService {
         }
         return null;
     }
+    
+    public List<Project> searchProjects(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return getAllProjects();
+        }
+        return projectRepository.findByTitleContaining(keyword.trim());
+    }
 
     public void updateProjectInfo(Long projectId, Long memberId , ProjectUpdateRequestDto requestDto) {
         Project project = projectRepository.findById(projectId);
@@ -144,7 +151,7 @@ public class ProjectService {
         if (requestDto.getMaxCount() < project.getCurrentCount()) {
             throw new IllegalArgumentException("현재 프로젝트에 속한 멤버의 수(" + project.getCurrentCount() + "명)보다 작게 설정할 수 없습니다.");
         }
-        
+
         Project newProject = new Project(
                 projectId,
                 requestDto.getTitle(),

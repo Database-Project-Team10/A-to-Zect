@@ -175,6 +175,18 @@
                         </button>
                     </form>
                 </th:block>
+                <th:block th:if="${project.role == 'PENDING'}">
+                    <button type="button" class="btn-action" style="background: #e9ecef; color: #aaa; cursor: default;">
+                        대기중
+                    </button>
+                    <form th:action="@{|/projects/${project.id}/cancel|}" method="post" style="flex: 1; display: flex;">
+                        <button type="submit" class="btn-action btn-delete"
+                                style="width: 100%; border-color: #ced4da; color: #495057;"
+                                onclick="return confirm('프로젝트 신청을 취소하시겠습니까?')">
+                            신청 취소
+                        </button>
+                    </form>
+                </th:block>
             </div>
         </div>
 

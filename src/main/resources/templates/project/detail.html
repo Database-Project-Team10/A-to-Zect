@@ -178,7 +178,7 @@
 
         <div th:if="${myRole == null}">
             <form th:if="${project.currentCount < project.maxCount}"
-                  th:action="@{|/projects/${project.id}/apply|}" method="post">
+                  th:action="@{|/projects/${project.id}/participants/apply|}" method="post">
                 <button type="submit" class="btn btn-primary btn-block"
                         style="padding: 15px; font-size: 16px;"
                         onclick="return confirm('프로젝트에 참가 신청하시겠습니까?');">

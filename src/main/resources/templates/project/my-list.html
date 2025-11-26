@@ -167,7 +167,7 @@
                 </th:block>
 
                 <th:block th:if="${project.role == 'MEMBER'}">
-                    <form th:action="@{|/projects/${project.id}/leave|}" method="post" style="flex: 1; display: flex;">
+                    <form th:action="@{|/projects/${project.id}/participants/leave|}" method="post" style="flex: 1; display: flex;">
                         <button type="submit" class="btn-action btn-delete"
                                 style="width: 100%; border-color: #fcc2d7; color: #d6336c;"
                                 onclick="return confirm('정말 프로젝트에서 나가시겠습니까?')">
@@ -179,7 +179,7 @@
                     <button type="button" class="btn-action" style="background: #e9ecef; color: #aaa; cursor: default;">
                         대기중
                     </button>
-                    <form th:action="@{|/projects/${project.id}/cancel|}" method="post" style="flex: 1; display: flex;">
+                    <form th:action="@{|/projects/${project.id}/participants/cancel|}" method="post" style="flex: 1; display: flex;">
                         <button type="submit" class="btn-action btn-delete"
                                 style="width: 100%; border-color: #ced4da; color: #495057;"
                                 onclick="return confirm('프로젝트 신청을 취소하시겠습니까?')">

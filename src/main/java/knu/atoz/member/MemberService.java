@@ -1,14 +1,9 @@
 package knu.atoz.member;
 
-import knu.atoz.member.dto.MemberInfoResponseDto;
-import knu.atoz.member.dto.MemberUpdateRequestDto;
-import knu.atoz.member.dto.PasswordUpdateRequestDto;
-import knu.atoz.member.dto.SignupRequestDto;
-import knu.atoz.member.exception.DuplicateEmailException;
-import knu.atoz.member.exception.InvalidCredentialsException;
-import knu.atoz.member.exception.MemberNotFoundException;
-import knu.atoz.member.exception.PasswordMismatchException;
+import knu.atoz.member.dto.*;
+import knu.atoz.member.exception.*;
 import lombok.RequiredArgsConstructor;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -30,6 +25,9 @@ public class MemberService {
             throw new PasswordMismatchException();
         }
 
+        String encryptedPassword = BCrypt.hashpw(signupRequestDto.getPassword(), BCrypt.gensalt());
+        signupRequestDto.setPassword(encryptedPassword);
+
         return memberRepository.save(signupRequestDto.toEntity());
     }
 
@@ -37,7 +35,7 @@ public class MemberService {
 
         Member member = memberRepository.findByEmail(email);
 
-        if (member == null || !member.getPassword().equals(password)) {
+        if (member == null || !BCrypt.checkpw(password, member.getPassword())) {
             throw new InvalidCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다.");
         }
 
@@ -50,7 +48,8 @@ public class MemberService {
         if (member == null){
             throw new MemberNotFoundException();
         }
-        if (!member.getPassword().equals(dto.getCurrentPassword())) {
+
+        if (!BCrypt.checkpw(dto.getCurrentPassword(), member.getPassword())) {
             throw new InvalidCredentialsException("현재 비밀번호가 일치하지 않습니다.");
         }
 
@@ -58,11 +57,12 @@ public class MemberService {
             throw new PasswordMismatchException();
         }
 
-        if (dto.getCurrentPassword().equals(dto.getNewPassword())) {
+        if (BCrypt.checkpw(dto.getNewPassword(), member.getPassword())) {
             throw new RuntimeException("새 비밀번호는 현재 비밀번호와 다르게 설정해야 합니다.");
-       }
-       
-        memberRepository.updatePassword(memberId, dto.getNewPassword());
+        }
+
+        String newEncryptedPassword = BCrypt.hashpw(dto.getNewPassword(), BCrypt.gensalt());
+        memberRepository.updatePassword(memberId, newEncryptedPassword);
     }
 
     public MemberInfoResponseDto getAllInfo(Long memberId) {
@@ -71,11 +71,11 @@ public class MemberService {
 
     public boolean isLoggedIn() {
         return true;
-    } // 컴파일 에러 방지용 임시 코드
+    }
 
     public Member getCurrentUser(){
         return new Member(1L, "1", "1", "1", LocalDate.now(), LocalDateTime.now());
-    } // 컴파일 에러 방지용 임시 코드
+    }
 
     public String getMemberName(Long memberId) {
         Member member = memberRepository.findById(memberId);
@@ -98,14 +98,14 @@ public class MemberService {
             }
         }
 
-        if (!member.getPassword().equals(dto.getPassword())) {
+        if (!BCrypt.checkpw(dto.getPassword(), member.getPassword())) {
             throw new InvalidCredentialsException("비밀번호가 올바르지 않습니다.");
         }
 
         Member updatedMember = new Member(
                 member.getId(),
                 dto.getEmail(),
-                dto.getPassword(),
+                member.getPassword(),
                 dto.getName(),
                 dto.getBirthDate(),
                 member.getCreatedAt()
@@ -115,7 +115,6 @@ public class MemberService {
 
         return updatedMember;
     }
-
 
     public void delete(Long memberId) {
         Member member = memberRepository.findById(memberId);

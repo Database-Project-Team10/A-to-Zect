@@ -55,6 +55,15 @@ public class ParticipantService {
             try { if (conn != null) { conn.setAutoCommit(true); conn.close(); } } catch (SQLException e) {}
         }
     }
+    public void cancelApplication(Long projectId, Long memberId) {
+        String role = participantRepository.findRole(projectId, memberId);
+        if (!"PENDING".equals(role)) {
+            throw new RuntimeException("대기 중(PENDING)인 상태에서만 신청을 취소할 수 있습니다.");
+        }
+
+        participantRepository.delete(projectId, memberId);
+    }
+
     public void applyProject(Long projectId, Long memberId) {
         
         if (participantRepository.exists(projectId, memberId)) {

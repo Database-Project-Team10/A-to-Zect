@@ -1,6 +1,7 @@
 package knu.atoz.link;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import knu.atoz.link.dto.LinkRequestDto;
 import knu.atoz.member.Member;
 import knu.atoz.participant.ParticipantService;
@@ -9,6 +10,7 @@ import knu.atoz.project.ProjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URLEncoder;
@@ -32,7 +34,6 @@ public class LinkController {
         Member loginMember = getLoginMember(session);
         if (loginMember == null) return "redirect:/members/login";
 
-        // 권한 체크 (팀원만 접근 가능)
         if (!isTeamMember(projectId, loginMember.getId())) {
             return "redirect:/projects/" + projectId + "?error=" + encode("접근 권한이 없습니다.");
         }
@@ -44,7 +45,7 @@ public class LinkController {
             model.addAttribute("project", project);
             model.addAttribute("links", links);
 
-            return "link/list"; // templates/link/list.html
+            return "link/list";
 
         } catch (Exception e) {
             return "redirect:/projects/" + projectId + "?error=" + encode(e.getMessage());
@@ -69,17 +70,23 @@ public class LinkController {
         model.addAttribute("linkDto", new LinkRequestDto());
         model.addAttribute("isNew", true);
 
-        return "link/form"; // templates/link/form.html
+        return "link/form";
     }
 
-    // 링크 생성 처리
     @PostMapping("/new")
     public String createLink(@PathVariable Long projectId,
-                             @ModelAttribute LinkRequestDto dto,
+                             @Valid @ModelAttribute("linkDto") LinkRequestDto dto,
+                             BindingResult bindingResult,
                              HttpSession session,
                              Model model) {
         Member loginMember = getLoginMember(session);
         if (loginMember == null) return "redirect:/members/login";
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("project", projectService.getProject(projectId));
+            model.addAttribute("isNew", true);
+            return "link/form";
+        }
 
         try {
             linkService.createLink(projectId, dto);
@@ -87,7 +94,6 @@ public class LinkController {
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("project", projectService.getProject(projectId));
-            model.addAttribute("linkDto", dto);
             model.addAttribute("isNew", true);
             return "link/form";
         }
@@ -124,15 +130,25 @@ public class LinkController {
         }
     }
 
-    // 링크 수정 처리
     @PostMapping("/{linkId}/edit")
     public String updateLink(@PathVariable Long projectId,
                              @PathVariable Long linkId,
-                             @ModelAttribute LinkRequestDto dto,
+                             @Valid @ModelAttribute("linkDto") LinkRequestDto dto,
+                             BindingResult bindingResult,
                              HttpSession session,
                              Model model) {
         Member loginMember = getLoginMember(session);
         if (loginMember == null) return "redirect:/members/login";
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("project", projectService.getProject(projectId));
+            model.addAttribute("isNew", false);
+            try {
+                model.addAttribute("link", linkService.getLink(linkId));
+            } catch (Exception ignored) {}
+
+            return "link/form";
+        }
 
         try {
             linkService.updateLink(linkId, projectId, dto);
@@ -140,13 +156,16 @@ public class LinkController {
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("project", projectService.getProject(projectId));
-            model.addAttribute("linkDto", dto);
             model.addAttribute("isNew", false);
+
+            try {
+                model.addAttribute("link", linkService.getLink(linkId));
+            } catch (Exception ignored) {}
+
             return "link/form";
         }
     }
 
-    // 링크 삭제 처리
     @PostMapping("/{linkId}/delete")
     public String deleteLink(@PathVariable Long projectId,
                              @PathVariable Long linkId,

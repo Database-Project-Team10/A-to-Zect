@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <title th:text="${isNew} ? '새 링크 등록' : '링크 수정'">링크 관리</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        /* [추가] 에러 발생 시 입력창 스타일 */
+        .field-error {
+            border-color: #dc3545 !important;
+            margin-bottom: 0 !important; /* 에러 시 아래 여백 제거 */
+        }
+        /* [추가] 에러 메시지 텍스트 스타일 */
+        .field-error-msg {
+            color: #dc3545;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 3px;       /* 입력창 바로 밑 */
+            margin-bottom: 15px;   /* 다음 요소와의 간격 */
+        }
+    </style>
 </head>
 <body>
 
@@ -16,21 +31,33 @@
     </div>
     <hr>
 
-    <div th:if="${error}" class="error-msg" th:text="${error}"></div>
+    <div th:if="${error}" class="error-msg" th:text="${error}" style="color: red; margin-bottom: 10px;"></div>
 
     <form th:action="${isNew} ? @{|/projects/${project.id}/links/new|} : @{|/projects/${project.id}/links/${link.id}/edit|}"
           method="post"
           th:object="${linkDto}">
 
-        <div>
-            <label for="title">링크 제목</label>
-            <input type="text" id="title" th:field="*{title}" placeholder="예: Spring Boot 공식 문서" required>
+        <div th:if="${#fields.hasGlobalErrors()}" class="error-msg" style="margin-bottom: 20px;">
+            <p th:each="err : ${#fields.globalErrors()}" th:text="${err}" style="color: red; font-weight: bold;"></p>
         </div>
 
-        <div>
+        <div style="margin-bottom: 5px;">
+            <label for="title">링크 제목</label>
+            <input type="text" id="title" th:field="*{title}"
+                   class="form-control"
+                   th:errorclass="field-error"
+                   placeholder="예: Spring Boot 공식 문서"
+                   style="margin-bottom: 15px;"> <div class="field-error-msg" th:errors="*{title}">제목 에러</div>
+        </div>
+
+        <div style="margin-bottom: 5px;">
             <label for="url">URL 주소</label>
-            <input type="text" id="url" th:field="*{url}" placeholder="https://..." required>
-            
+            <input type="text" id="url" th:field="*{url}"
+                   class="form-control"
+                   th:errorclass="field-error"
+                   placeholder="https://..."
+                   style="margin-bottom: 15px;"> <div class="field-error-msg" th:errors="*{url}">URL 에러</div>
+
             <p style="font-size: 12px; color: #888; margin-top: 5px;">
                 * 반드시 <code>http://</code> 또는 <code>https://</code> 로 시작해야 합니다.
             </p>

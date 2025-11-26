@@ -110,6 +110,22 @@ public class ProjectController {
 
         return "redirect:/projects/my";
     }
+
+    @PostMapping("/{projectId}/cancel")
+    public String cancelApplication(@PathVariable Long projectId, HttpSession session) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/members/login";
+        }
+
+        try {
+            participantService.cancelApplication(projectId, loginMember.getId());
+        } catch (Exception e) {
+            System.err.println("신청 취소 실패: " + e.getMessage());
+        }
+
+        return "redirect:/projects/my";
+    }
     
     @PostMapping("/{projectId}/delete")
     public String deleteProject(@PathVariable Long projectId, HttpSession session) {

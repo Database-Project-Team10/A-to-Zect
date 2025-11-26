@@ -1,6 +1,7 @@
 package knu.atoz.post;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import knu.atoz.member.Member;
 import knu.atoz.member.MemberService;
 import knu.atoz.participant.ParticipantService;
@@ -13,6 +14,7 @@ import knu.atoz.reply.dto.ReplyResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URLEncoder;
@@ -30,7 +32,6 @@ public class PostController {
     private final MemberService memberService;
     private final ReplyService replyService;
 
-    // 1. 게시글 목록
     @GetMapping
     public String listPosts(@PathVariable Long projectId, HttpSession session, Model model) {
         Member loginMember = checkLogin(session);
@@ -49,7 +50,6 @@ public class PostController {
         return "post/list";
     }
 
-    // 2. 게시글 상세
     @GetMapping("/{postId}")
     public String viewPost(@PathVariable Long projectId,
                            @PathVariable Long postId,
@@ -59,7 +59,6 @@ public class PostController {
         Member loginMember = (Member) session.getAttribute("loginMember");
         if (loginMember == null) return "redirect:/members/login";
 
-        // 권한 체크 (팀원인지)
         if (!isTeamMember(projectId, loginMember.getId())) {
             return "redirect:/projects/" + projectId + "?error=" + encode("접근 권한이 없습니다.");
         }
@@ -69,7 +68,6 @@ public class PostController {
             Project project = projectService.getProject(projectId);
             List<ReplyResponseDto> replies = replyService.getReplyList(postId);
 
-            // [추가] 댓글 작성용 빈 객체
             model.addAttribute("replyDto", new ReplyRequestDto());
             model.addAttribute("post", post);
             model.addAttribute("project", project);
@@ -80,7 +78,6 @@ public class PostController {
 
             model.addAttribute("replies", replies);
 
-
             return "post/detail";
 
         } catch (Exception e) {
@@ -88,7 +85,6 @@ public class PostController {
         }
     }
 
-    // 3. 글쓰기 폼
     @GetMapping("/new")
     public String createForm(@PathVariable Long projectId, HttpSession session, Model model) {
         if (checkLogin(session) == null) return "redirect:/members/login";
@@ -99,21 +95,32 @@ public class PostController {
         return "post/form";
     }
 
-    // 4. 글쓰기 처리
     @PostMapping("/new")
-    public String createPost(@PathVariable Long projectId, @ModelAttribute PostRequestDto dto, HttpSession session) {
+    public String createPost(@PathVariable Long projectId,
+                             @Valid @ModelAttribute("postDto") PostRequestDto dto,
+                             BindingResult bindingResult,
+                             HttpSession session,
+                             Model model) {
         Member loginMember = checkLogin(session);
         if (loginMember == null) return "redirect:/members/login";
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("project", projectService.getProject(projectId));
+            model.addAttribute("isNew", true);
+            return "post/form";
+        }
 
         try {
             postService.createPost(projectId, loginMember.getId(), dto);
             return "redirect:/projects/" + projectId + "/posts";
         } catch (Exception e) {
-            return "redirect:/projects/" + projectId + "/posts/new?error=" + encode(e.getMessage());
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("project", projectService.getProject(projectId));
+            model.addAttribute("isNew", true);
+            return "post/form";
         }
     }
 
-    // 5. 수정 폼
     @GetMapping("/{postId}/edit")
     public String editForm(@PathVariable Long projectId, @PathVariable Long postId, HttpSession session, Model model) {
         Member loginMember = checkLogin(session);
@@ -127,28 +134,40 @@ public class PostController {
         PostRequestDto dto = new PostRequestDto(post.getTitle(), post.getContent());
         model.addAttribute("project", projectService.getProject(projectId));
         model.addAttribute("postDto", dto);
-        model.addAttribute("postId", postId); // 수정 시 ID 필요
+        model.addAttribute("postId", postId);
         model.addAttribute("isNew", false);
 
         return "post/form";
     }
 
-    // 6. 수정 처리
     @PostMapping("/{postId}/edit")
     public String updatePost(@PathVariable Long projectId, @PathVariable Long postId,
-                             @ModelAttribute PostRequestDto dto, HttpSession session) {
+                             @Valid @ModelAttribute("postDto") PostRequestDto dto,
+                             BindingResult bindingResult,
+                             HttpSession session,
+                             Model model) {
         Member loginMember = checkLogin(session);
         if (loginMember == null) return "redirect:/members/login";
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("project", projectService.getProject(projectId));
+            model.addAttribute("postId", postId);
+            model.addAttribute("isNew", false);
+            return "post/form";
+        }
 
         try {
             postService.updatePost(postId, loginMember.getId(), dto);
             return "redirect:/projects/" + projectId + "/posts/" + postId;
         } catch (Exception e) {
-            return "redirect:/projects/" + projectId + "/posts/" + postId + "/edit?error=" + encode(e.getMessage());
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("project", projectService.getProject(projectId));
+            model.addAttribute("postId", postId);
+            model.addAttribute("isNew", false);
+            return "post/form";
         }
     }
 
-    // 7. 삭제 처리
     @PostMapping("/{postId}/delete")
     public String deletePost(@PathVariable Long projectId, @PathVariable Long postId, HttpSession session) {
         Member loginMember = checkLogin(session);
@@ -162,7 +181,6 @@ public class PostController {
         }
     }
 
-    // --- Helpers ---
     private Member checkLogin(HttpSession session) {
         return (Member) session.getAttribute("loginMember");
     }

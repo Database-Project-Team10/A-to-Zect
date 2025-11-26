@@ -19,6 +19,17 @@
             margin: 0 !important;
             cursor: pointer;
         }
+        .field-error {
+            border-color: #dc3545 !important;
+            margin-bottom: 0 !important;
+        }
+        .field-error-msg {
+            color: #dc3545;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 3px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -27,14 +38,31 @@
     <h1 th:text="${isNew} ? '🖊️ 게시글 작성' : '📝 게시글 수정'">글쓰기</h1>
     <hr>
 
+    <div th:if="${error}" class="error-msg" th:text="${error}" style="color: red; margin-bottom: 10px;"></div>
+
     <form th:action="${isNew} ? @{|/projects/${project.id}/posts/new|} : @{|/projects/${project.id}/posts/${postId}/edit|}"
           method="post" th:object="${postDto}">
 
-        <div>
-            <input type="text" th:field="*{title}" placeholder="제목을 입력하세요" required style="font-size: 16px; font-weight: bold;">
+        <div th:if="${#fields.hasGlobalErrors()}" class="error-msg" style="margin-bottom: 20px;">
+            <p th:each="err : ${#fields.globalErrors()}" th:text="${err}" style="color: red; font-weight: bold;"></p>
         </div>
-        <div>
-            <textarea th:field="*{content}" placeholder="내용을 입력하세요" required style="height: 300px;"></textarea>
+
+        <div style="margin-bottom: 5px;">
+            <input type="text" th:field="*{title}"
+                   class="form-control"
+                   th:errorclass="field-error"
+                   placeholder="제목을 입력하세요"
+                   style="font-size: 16px; font-weight: bold; margin-bottom: 15px;">
+            <div class="field-error-msg" th:errors="*{title}">제목 에러</div>
+        </div>
+
+        <div style="margin-bottom: 5px;">
+            <textarea th:field="*{content}"
+                      class="form-control"
+                      th:errorclass="field-error"
+                      placeholder="내용을 입력하세요"
+                      style="height: 300px; margin-bottom: 15px;"></textarea>
+            <div class="field-error-msg" th:errors="*{content}">내용 에러</div>
         </div>
 
         <div style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">

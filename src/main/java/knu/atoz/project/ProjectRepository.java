@@ -15,6 +15,36 @@ import java.util.List;
 @Repository
 public class ProjectRepository {
 
+    public List<Project> findByTitleContaining(String keyword) {
+        String sql = "SELECT * FROM project WHERE title LIKE ? ORDER BY created_at DESC";
+        List<Project> projectList = new ArrayList<>();
+
+        try (Connection conn = Azconnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            // Oracle DB의 LIKE 검색 패턴 설정 ('%keyword%')
+            pstmt.setString(1, "%" + keyword + "%");
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Project project = new Project(
+                            rs.getLong("id"),
+                            rs.getString("title"),
+                            rs.getString("description"),
+                            rs.getInt("current_count"),
+                            rs.getInt("max_count"),
+                            rs.getObject("created_at", LocalDateTime.class),
+                            rs.getObject("updated_at", LocalDateTime.class)
+                    );
+                    projectList.add(project);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("프로젝트 검색 중 오류 발생: " + e.getMessage());
+        }
+        return projectList;
+    }
+    
     public List<Project> findAllProjects() {
         String sql = "SELECT * FROM project";
         List<Project> projectList = new ArrayList<>();

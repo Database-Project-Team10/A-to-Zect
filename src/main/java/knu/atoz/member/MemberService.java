@@ -50,11 +50,18 @@ public class MemberService {
         if (member == null){
             throw new MemberNotFoundException();
         }
+        if (!member.getPassword().equals(dto.getCurrentPassword())) {
+            throw new InvalidCredentialsException("현재 비밀번호가 일치하지 않습니다.");
+        }
 
         if (!dto.getNewPassword().equals(dto.getConfirmNewPassword())) {
             throw new PasswordMismatchException();
         }
 
+        if (dto.getCurrentPassword().equals(dto.getNewPassword())) {
+            throw new RuntimeException("새 비밀번호는 현재 비밀번호와 다르게 설정해야 합니다.");
+       }
+       
         memberRepository.updatePassword(memberId, dto.getNewPassword());
     }
 

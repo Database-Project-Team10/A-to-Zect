@@ -56,7 +56,19 @@
             <button class="btn btn-outline" onclick="location.href='/projects/my'">📂 내 프로젝트</button>
         </div>
     </div>
-
+    <div class="search-container" style="text-align: center; margin-bottom: 40px;">
+        <form action="/projects" method="get" style="display: flex; justify-content: center; align-items: center; gap: 10px; max-width: 600px; margin: 0 auto;">
+            
+            <input type="text" name="keyword" th:value="${keyword}" 
+                   placeholder="관심 있는 프로젝트를 검색해보세요..." 
+                   style="flex-grow: 1; height: 50px; padding: 0 20px; border-radius: 25px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; margin: 0;">
+            
+            <button type="submit" class="btn btn-primary" 
+                    style="height: 50px; padding: 0 25px; border-radius: 25px; font-size: 16px; font-weight: bold; white-space: nowrap; box-sizing: border-box; margin: 0; display: inline-flex; align-items: center; justify-content: center;">
+                검색
+            </button>
+        </form>
+    </div>
     <div class="project-section" style="border-top: none;">
         <div style="margin-bottom: 15px;">
             <h3 style="margin: 0; border: none; padding: 0;">📋 등록된 전체 프로젝트</h3>

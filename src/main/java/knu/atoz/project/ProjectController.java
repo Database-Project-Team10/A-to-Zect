@@ -32,12 +32,13 @@ public class ProjectController {
     private final ProjectMbtiService projectMbtiService;
 
     @GetMapping("")
-    public String showAllProjects(Model model) {
-
-        List<Project> projectList = projectService.getAllProjects();
-
+    public String showAllProjects(@RequestParam(value = "keyword", required = false) String keyword, 
+                                  Model model) {
         
+        List<Project> projectList = projectService.searchProjects(keyword);
+
         model.addAttribute("projects", projectList);
+        model.addAttribute("keyword", keyword);
 
         return "project/list";
     }
@@ -92,6 +93,39 @@ public class ProjectController {
         return "project/my-list";
     }
 
+    @PostMapping("/{projectId}/leave")
+    public String leaveProject(@PathVariable Long projectId, HttpSession session) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/members/login";
+        }
+
+        try {
+            // 서비스 호출
+            participantService.leaveProject(projectId, loginMember.getId());
+        } catch (Exception e) {
+            // 에러 발생 시에도 일단 목록으로 리다이렉트 (필요 시 에러 파라미터 추가)
+            System.err.println("나가기 실패: " + e.getMessage());
+        }
+
+        return "redirect:/projects/my";
+    }
+
+    @PostMapping("/{projectId}/cancel")
+    public String cancelApplication(@PathVariable Long projectId, HttpSession session) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/members/login";
+        }
+
+        try {
+            participantService.cancelApplication(projectId, loginMember.getId());
+        } catch (Exception e) {
+            System.err.println("신청 취소 실패: " + e.getMessage());
+        }
+
+        return "redirect:/projects/my";
+    }
     
     @PostMapping("/{projectId}/delete")
     public String deleteProject(@PathVariable Long projectId, HttpSession session) {

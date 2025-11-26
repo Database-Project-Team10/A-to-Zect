@@ -51,9 +51,6 @@ public class ReplyController {
         }
     }
 
-    // (댓글 수정은 모달이나 인라인 폼이 필요하지만, 간단히 구현하려면 별도 페이지보다는 삭제 후 다시 쓰는 게 나을 수도 있음.
-    // 여기서는 일단 생략하거나, 필요시 별도 수정 로직 추가 가능)
-
     private String encode(String text) {
         return URLEncoder.encode(text, StandardCharsets.UTF_8);
     }

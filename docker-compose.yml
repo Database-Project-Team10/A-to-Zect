@@ -10,6 +10,7 @@ services:
     depends_on:
       - db
     environment:
+      - TZ=Asia/Seoul
       - SPRING_DATASOURCE_URL=${DB_URL}
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PWD}
@@ -24,6 +25,7 @@ services:
     ports:
       - "1521:1521"
     environment:
+      - TZ=Asia/Seoul
       - ORACLE_PASSWORD=${ORACLE_PWD}
       - APP_USER=${DB_USER}
       - APP_USER_PASSWORD=${DB_PWD}

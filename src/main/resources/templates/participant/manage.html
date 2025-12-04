@@ -70,6 +70,8 @@
     </div>
 
 </div>
-
+<script th:inline="javascript" th:if="${param.error}">
+    alert([[${param.error}]]);
+</script>
 </body>
 </html>

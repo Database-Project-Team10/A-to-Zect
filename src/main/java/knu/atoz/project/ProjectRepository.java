@@ -44,7 +44,29 @@ public class ProjectRepository {
         }
         return projectList;
     }
-    
+    public Project findByIdWithLock(Connection conn, Long projectId) throws SQLException {
+        String sql = "SELECT * FROM project WHERE id = ? FOR UPDATE";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, projectId);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Project(
+                            rs.getLong("id"),
+                            rs.getString("title"),
+                            rs.getString("description"),
+                            rs.getInt("current_count"),
+                            rs.getInt("max_count"),
+                            rs.getObject("created_at", LocalDateTime.class),
+                            rs.getObject("updated_at", LocalDateTime.class)
+                    );
+                }
+            }
+        }
+        return null;
+    }
+
     public List<Project> findAllProjects() {
         String sql = "SELECT * FROM project";
         List<Project> projectList = new ArrayList<>();

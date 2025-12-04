@@ -55,6 +55,30 @@ public class ParticipantRepository {
         }
     }
 
+    public void saveWithTx(Connection conn, Long projectId, Long memberId) throws SQLException {
+        String sql = "INSERT INTO participant (member_id, project_id, role) Values (?, ?, 'PENDING')";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, memberId);
+            pstmt.setLong(2, projectId);
+
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("참가 신청 실패: 저장된 행이 없습니다.");
+            }
+        }
+    }
+
+    public boolean existsWithTx(Connection conn, Long projectId, Long memberId) throws SQLException {
+        String sql = "SELECT 1 FROM participant WHERE project_id = ? AND member_id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, projectId);
+            pstmt.setLong(2, memberId);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
     public boolean exists(Long projectId, Long memberId){
         String sql = "SELECT * FROM participant WHERE project_id = ? AND member_id = ?";
         try (Connection conn = Azconnection.getConnection();
@@ -156,10 +180,6 @@ public class ParticipantRepository {
         }
     }
 
-    /**
-     * 참가자 삭제 (거절 또는 나가기)
-     * PK인 project_id와 member_id를 모두 만족하는 행을 삭제합니다.
-     */
     public void delete(Long projectId, Long memberId) {
         String sql = "DELETE FROM Participant WHERE project_id = ? AND member_id = ?";
 
